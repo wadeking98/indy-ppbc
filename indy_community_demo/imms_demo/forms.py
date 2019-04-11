@@ -21,7 +21,6 @@ class HealthIdsProofRequestForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super(HealthIdsProofRequestForm, self).__init__(*args, **kwargs)
-        #self.fields['wallet_name'].widget.attrs['readonly'] = True
 
 
 class ImmsStatusProofRequestForm(forms.Form):
@@ -29,13 +28,26 @@ class ImmsStatusProofRequestForm(forms.Form):
     Step 2 - The school issues a consent enablement credential to the parent, simultaneously
              sending a proof request to the imms repo to get the child's immunization status
     """
+    first_name_parent = forms.CharField(label='First Name (Parent)', max_length=60)
+    last_name_parent = forms.CharField(label='Last Name (Parent)', max_length=80)
+    health_id_parent = forms.CharField(label='Last Name (Parent)', max_length=20)
+    first_name_child = forms.CharField(label='First Name (Child)', max_length=60)
+    last_name_child = forms.CharField(label='Last Name (Child)', max_length=80)
+    health_id_child = forms.CharField(label='Last Name (Parent)', max_length=20)
+    school_did = forms.CharField(label='DID (School)', max_length=60)
 
     def __init__(self, *args, **kwargs):
         super(ImmsStatusProofRequestForm, self).__init__(*args, **kwargs)
-        #self.fields['wallet_name'].widget.attrs['readonly'] = True
+        self.fields['first_name_parent'].widget.attrs['readonly'] = True
+        self.fields['last_name_parent'].widget.attrs['readonly'] = True
+        self.fields['health_id_parent'].widget.attrs['readonly'] = True
+        self.fields['first_name_child'].widget.attrs['readonly'] = True
+        self.fields['last_name_child'].widget.attrs['readonly'] = True
+        self.fields['health_id_child'].widget.attrs['readonly'] = True
+        self.fields['school_did'].widget.attrs['readonly'] = True
 
 
-class ImmsRequestProofRequestForm(forms.Form):
+class ImmsRequestProofRequestForm(ImmsStatusProofRequestForm):
     """
     Step 3 - The imms repo receives the proof request from the school, and sends a proof request 
              to the parent to verify consent
@@ -43,16 +55,16 @@ class ImmsRequestProofRequestForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super(ImmsRequestProofRequestForm, self).__init__(*args, **kwargs)
-        #self.fields['wallet_name'].widget.attrs['readonly'] = True
 
 
-class ImmsStatusProofResponseForm(forms.Form):
+class ImmsStatusProofResponseForm(ImmsRequestProofRequestForm):
     """
     Step 4 - Upon receipt of the consent proof from the parent, issue the immunization status 
              proof to the school
     """
+    immunizaton_status = forms.CharField(label='Immunization Status', max_length=20)
 
     def __init__(self, *args, **kwargs):
         super(ImmsStatusProofResponseForm, self).__init__(*args, **kwargs)
-        #self.fields['wallet_name'].widget.attrs['readonly'] = True
+        self.fields['immunizaton_status'].widget.attrs['readonly'] = True
 

@@ -11,4 +11,7 @@ django-filter
 django-background-tasks
 aiohttp~=3.3.0
 pyyaml
-django-indy-community
+#django-indy-community
+file:///Users/icostanzo/Projects/django-indy-community/distro/dist/django-indy-community-0.1.5.tar.gz
+
+

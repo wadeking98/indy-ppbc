@@ -28,6 +28,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'background_task',
+    'imms_demo',
+    'indy_community_demo',
 ]
 
 def file_ext():
@@ -60,6 +62,10 @@ INDY_CONFIG = {
     'ledger_url': 'http://localhost:9000',
 }
 
+INDY_PROFILE_VIEW = 'imms_demo.views.profile_view'
+INDY_ORG_DATA_VIEW = 'imms_demo.views.data_view'
+INDY_WALLET_VIEW = 'imms_demo.views.wallet_view'
+
 BACKGROUND_TASK_RUN_ASYNC = False
 BACKGROUND_TASK_ASYNC_THREADS = 1
 MAX_ATTEMPTS = 1
@@ -67,6 +73,8 @@ MAX_ATTEMPTS = 1
 AUTH_USER_MODEL = 'indy_community.IndyUser'
 INDY_ORGANIZATION_MODEL = 'indy_community.IndyOrganization'
 INDY_ORG_RELATION_MODEL = 'indy_community.IndyOrgRelationship'
+
+INDY_CONVERSATION_CALLBACK = 'imms_demo.views.conversation_callback'
 
 FIXTURE_DIRS = (
    'indy_community_demo/fixtures/',
@@ -87,7 +95,9 @@ ROOT_URLCONF = 'indy_community_demo.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [
+            os.path.join(BASE_DIR, 'imms_demo/templates'),
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

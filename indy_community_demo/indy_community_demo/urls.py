@@ -19,4 +19,5 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('indy/', include('indy_community.urls')),
+    path('', include('imms_demo.urls')),
 ]
