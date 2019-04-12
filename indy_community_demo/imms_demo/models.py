@@ -16,3 +16,26 @@ class ImmunizationConversation(models.Model):
     imms_consent_proof = models.ForeignKey(AgentConversation, related_name='imms_consent_proof', on_delete=models.CASCADE)
     status = models.CharField(max_length=20)
 
+
+# track health identities issued by the HA (ref to wallet)
+class HealthIdentity(models.Model):
+    issuer = models.ForeignKey(IndyWallet, to_field="wallet_name", on_delete=models.CASCADE)
+    health_id = models.CharField(max_length=20, unique=True)
+    first_name = models.CharField(max_length=60)
+    last_name = models.CharField(max_length=120)
+    birth_date = models.DateField()
+    health_id_type = models.CharField(max_length=20)
+    parent_health_id = models.CharField(max_length=20, blank = True, null=True)
+    issue_date = models.DateField()
+    last_issued = models.ForeignKey(AgentConversation, related_name='health_id_issued', blank = True, null=True, on_delete=models.CASCADE)
+
+
+# track issued immunizatons status
+class ImmunizationStatusCertificate(models.Model):
+    issuer = models.ForeignKey(IndyWallet, to_field="wallet_name", on_delete=models.CASCADE)
+    health_id = models.ForeignKey(HealthIdentity, to_field="health_id", related_name='imms_status_certificate', on_delete=models.CASCADE)
+    immunization_status = models.CharField(max_length=20)
+    immunization_status_date = models.DateField()
+    issue_date = models.DateField()
+    last_issued = models.ForeignKey(AgentConversation, related_name='imms_status_issued', blank = True, null=True, on_delete=models.CASCADE)
+
