@@ -1,66 +1,12 @@
 {% load i18n %}
 {% load static %}
 
-<div class='newsfeed-posted-cont'>
-	<div class='newsfeed-posted-event-opps-cont'>
-		<div>
-			<a href=''>
-				<h4>User Data</h4>
-				<h6>{{ org_role }}</h6>
-			</a>
-		</div>
-		<br>
-		{% if org_role == 'HA' %}
-		<div>
-			<p>
-				Issue 2 credentials simultaneously - Health Identity Cred to Individual, and
-				Immunization Status Credential to Repository
-			</p>
-			<p>
-				<a href="{% url 'ha_issue_credentials' %}">Issue Identity and Immunizations Credentials</a>
-			</p>
-			<p>
-				TBD list issued credentials here
-			</p>
-		</div>
-		{% endif %}
-		{% if org_role == 'School' %}
-		<div>
-			<p>
-				Ask Individual for Proof of Health Id (to get Id's to include in Consent
-			</p>
-			<p>
-				<a href="{% url 'school_request_health_id' %}">Request Health Id(s)</a>
-			</p>
-			<p>
-				TBD list issued health id proof requests
-			</p>
-			<p>
-				Send Proof Request to Repository to get Proof of Immunizations (Auto)
-			</p>
-			<p>
-				TBD list issued immunization status requests
-			</p>
-		</div>
-		{% endif %}
-		{% if org_role == 'Repository' %}
-		<div>
-			<p>
-				Receive and store Immunization Status Credentials from HA (Auto)
-			</p>
-			<p>
-				TBD list received health id's
-			</p>
-			<p>
-				Respond to Immunization Status Proof Request from School - issue a Consent Request 
-				to Individual before releasing the Proof (Auto)
-			</p>
-			<p>
-				TBD list immunization status conversations
-			</p>
-		</div>
-		{% endif %}
-	</div>
-</div>
-
-<div class='newsfeed-post-seperator'></div>
+{% if org_role == 'HA' %}
+    {% include "imms_demo/pageIncludes/ha_userdata.html" %}
+{% endif %}
+{% if org_role == 'School' %}
+    {% include "imms_demo/pageIncludes/school_userdata.html" %}
+{% endif %}
+{% if org_role == 'Repository' %}
+    {% include "imms_demo/pageIncludes/repo_userdata.html" %}
+{% endif %}

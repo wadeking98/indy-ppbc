@@ -1,0 +1,49 @@
+{% load i18n %}
+{% load static %}
+
+<div class='newsfeed-posted-cont'>
+	<div class='newsfeed-posted-info'>
+		<div>
+			<a href=''>
+				<h2>Issued Health Identities and Immunization Certificates</h2>
+			</a>
+		</div>
+	</div>
+    <div class='newsfeed-post-seperator'></div>
+
+{% for connection in user_connections %}
+    <div class='newsfeed-posted-top-cont'>
+        <div class='newsfeed-posted-img-info'>
+            <div class='newsfeed-posted-img'>
+                <img src="{% static "/indy/accounticon.png" %}">
+            </div>
+            <div class='newsfeed-posted-info'>
+        		<div>
+        			<a href=''>
+        				<h2>{{ connection.partner_name }}</h2>
+        			</a>
+        		</div>
+        		<div>
+    				<h5>
+        				<a href="{% url 'ha_issue_credentials' %}">Issue NEW Identity and Immunizations Credentials</a>
+    				</h5>
+        			{% for conversation in connection.agentconversation_set.all %}
+        				{% if immsconversation.health_id_issued %}
+	        				<h5>
+	        					Health ID Issued {{ immsconversation.health_id_issued.issue_date }} 
+	        					Status [{{ immsconversation.imms_status_issued.status }}]
+	        				</h5>
+	        				{% if immsconversation.imms_status_issued %}
+		        				<h5>
+		        					Immunization Status Issued {{ immsconversation.imms_status_issued.issue_date }} 
+		        					Status [{{ immsconversation.imms_status_issued.status }}]
+		        				</h5>
+	        				{% endif %}
+        				{% endif %}
+        			{% endfor %}
+        		</div>
+            </div>
+        </div>
+    </div>
+{% empty %}
+{% endfor %}

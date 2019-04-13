@@ -10,6 +10,21 @@ import json
 ###############################################################
 # Forms to support immunizations consent/presentation workflow
 ###############################################################
+class IssueHealthIdAndImmsStatusForm(forms.Form):
+    first_name = forms.CharField(label='First Name', max_length=60)
+    last_name = forms.CharField(label='Last Name', max_length=80)
+    birth_date = forms.DateField()
+    health_id = forms.CharField(label='Health ID', max_length=20)
+    health_id_type = forms.CharField(label='Health ID Type', max_length=20,
+                                       help_text='"Parent" or "Child".')
+    health_id_parent = forms.CharField(label='Health ID (Parent)', max_length=20,
+                                       required=False,
+                                       help_text='Optional, required if Health ID Type is "Child".')
+    issue_date = forms.DateField()
+    immunization_status = forms.CharField(label='Immunization Status', max_length=20,
+                                       help_text='"OK" or "Not OK".')
+    immunization_status_date = forms.DateField()
+
 class HealthIdsProofRequestForm(forms.Form):
     """
     Step 1 - The school has to issue a proof request to get the health id's for the parent and child

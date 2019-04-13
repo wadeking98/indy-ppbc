@@ -1,7 +1,10 @@
 from django.shortcuts import render
 
-from indy_community.models import *
+import indy_community.models as indy_models
+import indy_community.views as indy_views
+
 from .models import *
+from .forms import *
 
 
 ########################################################################
@@ -16,7 +19,21 @@ def wallet_view(request):
 
 
 def ha_data_view(request, org):
-    return render(request, 'imms_demo/imms_data.html', {'org': org, 'org_role': org.role.name})
+    if request.method == 'POST':
+        pass
+    else:
+        wallet = indy_views.wallet_for_current_session(request)
+        repo_connections = indy_models.AgentConnection.objects.filter(wallet=wallet, status='Active', partner_name='Island Health Imms Repo').all()
+        if 0 < len(repo_connections):
+            repo_connection = repo_connections[0]
+        else:
+            repo_connection = None
+        user_connections = indy_models.AgentConnection.objects.filter(wallet=wallet, status='Active').exclude(partner_name='Island Health Imms Repo').all()
+        return render(request, 'imms_demo/imms_data.html', 
+                    {'org': org, 
+                     'org_role': org.role.name, 
+                     'repo_connection': repo_connection,
+                     'user_connections': user_connections})
 
 
 def school_data_view(request, org):
@@ -30,7 +47,7 @@ def repo_data_view(request, org):
 # dispatcher
 def data_view(request):
     org_id = request.session['ACTIVE_ORG']
-    orgs = IndyOrganization.objects.filter(id=org_id).all()
+    orgs = indy_models.IndyOrganization.objects.filter(id=org_id).all()
 
     # let's run separate views per org role
     if orgs[0].role.name == 'HA':
@@ -42,7 +59,12 @@ def data_view(request):
 
 
 def ha_issue_credentials(request):
-    return render(request, 'indy/form_response.html', {'msg': 'TBD HA issue health id'})
+    if request.method == 'POST':
+        pass
+    else:
+        form = IssueHealthIdAndImmsStatusForm(initial={ 'connection_id': 0,
+                                                  'wallet_name': 'tmp' })
+        return render(request, 'imms_demo/ha/issue_id_imms.html', {'form': form})
 
 
 def school_request_health_id(request):
