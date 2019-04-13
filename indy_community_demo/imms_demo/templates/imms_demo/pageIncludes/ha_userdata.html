@@ -25,20 +25,23 @@
         		</div>
         		<div>
     				<h5>
-        				<a href="{% url 'ha_issue_credentials' %}">Issue NEW Identity and Immunizations Credentials</a>
+        				<a href="{% url 'ha_issue_credentials' %}?id={{connection.id}}">
+                            Issue NEW Identity and Immunizations Credentials
+                        </a>
     				</h5>
-        			{% for conversation in connection.agentconversation_set.all %}
-        				{% if immsconversation.health_id_issued %}
+        			{% for immsconversation in connection.agentconversation_set.all %}
+        				{% if immsconversation.health_id_issued.get %}
 	        				<h5>
-	        					Health ID Issued {{ immsconversation.health_id_issued.issue_date }} 
-	        					Status [{{ immsconversation.imms_status_issued.status }}]
-	        				</h5>
-	        				{% if immsconversation.imms_status_issued %}
-		        				<h5>
-		        					Immunization Status Issued {{ immsconversation.imms_status_issued.issue_date }} 
-		        					Status [{{ immsconversation.imms_status_issued.status }}]
-		        				</h5>
+	        					Health ID {{ immsconversation.health_id_issued.get.health_id }}
+                                {{ immsconversation.health_id_issued.get.first_name }}
+                                {{ immsconversation.health_id_issued.get.last_name }},
+                                {{ immsconversation.health_id_issued.get.issue_date }} 
+	        					[{{ immsconversation.status }}]
+	        				{% if immsconversation.health_id_issued.get.imms_status_certificate.get %}
+		        					Immunization Status Issued
+                                    {{ immsconversation.health_id_issued.get.imms_status_certificate.get.issue_date }} 
 	        				{% endif %}
+                            </h5>
         				{% endif %}
         			{% endfor %}
         		</div>

@@ -16,6 +16,8 @@ class ImmunizationConversation(models.Model):
     imms_consent_proof = models.ForeignKey(AgentConversation, related_name='imms_consent_proof', on_delete=models.CASCADE)
     status = models.CharField(max_length=20)
 
+    def __str__(self):
+        return self.wallet.wallet_name + ' ' + self.wallet_role + ' ' + self.status
 
 # track health identities issued by the HA (ref to wallet)
 class HealthIdentity(models.Model):
@@ -29,6 +31,9 @@ class HealthIdentity(models.Model):
     issue_date = models.DateField()
     last_issued = models.ForeignKey(AgentConversation, related_name='health_id_issued', blank = True, null=True, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return self.health_id + ': ' + self.first_name + ' ' + self.last_name
+
 
 # track issued immunizatons status
 class ImmunizationStatusCertificate(models.Model):
@@ -39,3 +44,5 @@ class ImmunizationStatusCertificate(models.Model):
     issue_date = models.DateField()
     last_issued = models.ForeignKey(AgentConversation, related_name='imms_status_issued', blank = True, null=True, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return self.health_id.health_id + ': ' + self.health_id.first_name + ' ' + self.health_id.last_name

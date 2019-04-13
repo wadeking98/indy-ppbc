@@ -112,6 +112,10 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'indy_community_demo.wsgi.application'
 
+DEFAULT_USER_ROLE = 'User'
+DEFAULT_ORG_ROLE = 'Admin'
+
+LOGOUT_REDIRECT_URL = '/'
 
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases

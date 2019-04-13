@@ -1,3 +1,9 @@
 from django.contrib import admin
 
-# Register your models here.
+from .models import *
+
+
+admin.site.register(HealthIdentity)
+admin.site.register(ImmunizationStatusCertificate)
+admin.site.register(ImmunizationConversation)
+
