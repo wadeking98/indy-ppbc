@@ -11,6 +11,9 @@ import json
 # Forms to support immunizations consent/presentation workflow
 ###############################################################
 class IssueHealthIdAndImmsStatusForm(forms.Form):
+    """
+    Step 0 - Health Authority issues Health ID and Immunization Status credentials
+    """
     connection_id = forms.CharField(widget=forms.HiddenInput())
     first_name = forms.CharField(label='First Name', max_length=60)
     last_name = forms.CharField(label='Last Name', max_length=80)
@@ -32,6 +35,7 @@ class HealthIdsProofRequestForm(forms.Form):
     """
     Step 1 - The school has to issue a proof request to get the health id's for the parent and child
     """
+    connection_id = forms.CharField(widget=forms.HiddenInput())
     first_name_parent = forms.CharField(label='First Name (Parent)', max_length=60)
     last_name_parent = forms.CharField(label='Last Name (Parent)', max_length=80)
     first_name_child = forms.CharField(label='First Name (Child)', max_length=60)

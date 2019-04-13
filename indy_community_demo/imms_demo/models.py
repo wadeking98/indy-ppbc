@@ -8,13 +8,16 @@ from indy_community.models import *
 class ImmunizationConversation(models.Model):
     wallet = models.ForeignKey(IndyWallet, to_field="wallet_name", on_delete=models.CASCADE)
     wallet_role = models.ForeignKey(IndyOrgRole, blank = True, null=True, on_delete=models.CASCADE)
+    # for a school - this is a referece to the health id proof request sent to the parent
+    health_id_proof = models.ForeignKey(AgentConversation, related_name='health_id_proof', blank = True, null=True, on_delete=models.CASCADE)
     # for a school - this is a referece to the consent credential sent to the parent
-    consent_enablement = models.ForeignKey(AgentConversation, related_name='consent_enablement', on_delete=models.CASCADE)
+    consent_enablement = models.ForeignKey(AgentConversation, related_name='consent_enablement', blank = True, null=True, on_delete=models.CASCADE)
     # a reference to the proof request between the school and repo (for both orgs)
-    imms_status_proof = models.ForeignKey(AgentConversation, related_name='imms_status_proof', on_delete=models.CASCADE)
+    imms_status_proof = models.ForeignKey(AgentConversation, related_name='imms_status_proof', blank = True, null=True, on_delete=models.CASCADE)
     # for the repo - a reference to the consent proof from the parent
-    imms_consent_proof = models.ForeignKey(AgentConversation, related_name='imms_consent_proof', on_delete=models.CASCADE)
+    imms_consent_proof = models.ForeignKey(AgentConversation, related_name='imms_consent_proof', blank = True, null=True, on_delete=models.CASCADE)
     status = models.CharField(max_length=20)
+    initiation_date = models.DateField()
 
     def __str__(self):
         return self.wallet.wallet_name + ' ' + self.wallet_role + ' ' + self.status

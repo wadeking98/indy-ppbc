@@ -40,7 +40,23 @@ def ha_data_view(request, org):
 
 
 def school_data_view(request, org):
-    return render(request, 'imms_demo/imms_data.html', {'org': org, 'org_role': org.role.name})
+    wallet = indy_views.wallet_for_current_session(request)
+    repo_connections = indy_models.AgentConnection.objects.filter(wallet=wallet, status='Active', partner_name='Island Health Imms Repo').all()
+    if 0 < len(repo_connections):
+        repo_connection = repo_connections[0]
+    else:
+        repo_connection = None
+    user_connections = indy_models.AgentConnection.objects.filter(wallet=wallet, status='Active').exclude(partner_name='Island Health Imms Repo').all()
+    for connection in user_connections:
+        print("connection", connection)
+        for conversation in connection.agentconversation_set.all():
+            print("conversation", conversation)
+
+    return render(request, 'imms_demo/imms_data.html', 
+                {'org': org, 
+                 'org_role': org.role.name, 
+                 'repo_connection': repo_connection,
+                 'user_connections': user_connections})
 
 
 def repo_data_view(request, org):
@@ -186,7 +202,22 @@ def ha_issue_credentials(request):
 
 
 def school_request_health_id(request):
-    return render(request, 'indy/form_response.html', {'msg': 'TBD School request health id'})
+    if request.method == 'POST':
+        form = HealthIdsProofRequestForm(request.POST)
+        if not form.is_valid():
+            return render(request, 'indy/form_response.html', {'msg': 'Form error', 'msg_txt': str(form.errors)})
+        else:
+            # TBD
+            pass
+    else:
+        wallet = indy_views.wallet_for_current_session(request)
+        connection_id = request.GET.get('id', None)
+        connections = AgentConnection.objects.filter(id=connection_id, wallet=wallet).all()
+        connection = connections[0]
+
+        form = HealthIdsProofRequestForm(initial={ 'connection_id': connection.id,
+                                                        'wallet_name': wallet.wallet_name })
+        return render(request, 'imms_demo/school/request_health_id.html', {'form': form})
 
 
 ########################################################################
