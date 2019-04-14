@@ -34,6 +34,14 @@ HA Immunization Consent Enablement:
     - consenting_health_id
     - consent_data
     - consent_type
+HA Proof of Health Identity:
+  type: proof_request
+  description: Reveals child name and parent and child Health IDs
+  revealed_attributes:
+    - {'name':'health_id', 'restrictions':[{'issuer_did': '$HA_DID'}]}
+    - {'name':'first_name', 'restrictions':[{'issuer_did': '$HA_DID'}]}
+    - {'name':'last_name', 'restrictions':[{'issuer_did': '$HA_DID'}]}
+    - {'name':'parent_health_id', 'restrictions':[{'issuer_did': '$HA_DID'}]}
 HA Proof of Immunization Consent:
   type: proof_request
   description: Proof that a parent has consented to share child's immunization status
@@ -47,7 +55,7 @@ HA Proof of Immunization Consent:
     - {'name':'user_comments'}
 HA Proof of Immunization:
   type: proof_request
-  description: Data revealed by a MYco Client for use in a study
+  description: Child's immunization status to be revealed to the school
   revealed_attributes:
     - {'name':'health_id', 'restrictions':[{'issuer_did': '$HA_DID'}]}
     - {'name':'first_name', 'restrictions':[{'issuer_did': '$HA_DID'}]}

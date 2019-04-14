@@ -1,4 +1,7 @@
 from django.shortcuts import render
+from django.conf import settings
+
+import uuid
 
 import indy_community.models as indy_models
 import indy_community.views as indy_views
@@ -7,6 +10,8 @@ import indy_community.agent_utils as agent_utils
 from .models import *
 from .forms import *
 
+
+HA_DID = getattr(settings, "ISLAND_HA_DID", None)
 
 ########################################################################
 # Create your views here.
@@ -77,6 +82,7 @@ def data_view(request):
         return repo_data_view(request, orgs[0])
 
 
+# Health Authority simultaneously issues Health ID (to individual) and Immunization Status (to Imms Repo)
 def ha_issue_credentials(request):
     if request.method == 'POST':
         form = IssueHealthIdAndImmsStatusForm(request.POST)
@@ -104,7 +110,7 @@ def ha_issue_credentials(request):
                 repo_connection = repo_connections[0]
             else:
                 return render(request, 'indy/form_response.html', {'msg': 'Form error', 'msg_txt': "Can't issue credentials, no Immunizations Repository"})
-            user_connections = indy_models.AgentConnection.objects.filter(id=connection_id, wallet=wallet, status='Active').exclude(partner_name='Island Health Imms Repo').all()
+            user_connections = indy_models.AgentConnection.objects.filter(id=connection_id, wallet=wallet, status='Active').all()
             if 0 < len(user_connections):
                 user_connection = user_connections[0]
             else:
@@ -188,7 +194,7 @@ def ha_issue_credentials(request):
                         )
             issued_imms.save()
 
-            return render(request, 'indy/form_response.html', {'msg': 'Issues Health Identity and Immunizations Credentials'})
+            return render(request, 'indy/form_response.html', {'msg': 'Issued Health Identity and Immunizations Credentials'})
 
     else:
         wallet = indy_views.wallet_for_current_session(request)
@@ -207,8 +213,63 @@ def school_request_health_id(request):
         if not form.is_valid():
             return render(request, 'indy/form_response.html', {'msg': 'Form error', 'msg_txt': str(form.errors)})
         else:
-            # TBD
-            pass
+            cd = form.cleaned_data
+            connection_id = cd.get('connection_id')
+            first_name_child = cd.get('first_name_child')
+            last_name_child = cd.get('last_name_child')
+            first_name_parent = cd.get('first_name_parent')
+            last_name_parent = cd.get('last_name_parent')
+
+            org_id = request.session['ACTIVE_ORG']
+            orgs = indy_models.IndyOrganization.objects.filter(id=org_id).all()
+            org_role = orgs[0].role
+
+            wallet = indy_views.wallet_for_current_session(request)
+            user_connections = indy_models.AgentConnection.objects.filter(id=connection_id, wallet=wallet, status='Active').all()
+            if 0 < len(user_connections):
+                user_connection = user_connections[0]
+            else:
+                return render(request, 'indy/form_response.html', {'msg': 'Form error', 'msg_txt': "Can't issue proof, no User Connection"})
+
+            # find proof request
+            proof_requests = indy_models.IndyProofRequest.objects.filter(proof_req_name='HA Proof of Health Identity').all()
+            if 0 < len(proof_requests):
+                proof_request = proof_requests[0]
+            else:
+                return render(request, 'indy/form_response.html', {'msg': 'Form error', 'msg_txt': "Can't issue proof, proof request not found"})
+
+            # build the proof request and send
+            proof_uuid = str(uuid.uuid4())
+            proof_name = {
+                        'type': 'HA Proof of Health Identity',
+                        'first_name_child': first_name_child,
+                        'last_name_child': last_name_child,
+                        'first_name_parent': first_name_parent,
+                        'last_name_parent': last_name_parent
+                    }
+            proof_attrs = proof_request.proof_req_attrs
+            proof_predicates = proof_request.proof_req_predicates
+            proof_attrs = proof_attrs.replace('$HA_DID', HA_DID)
+            proof_predicates = proof_predicates.replace('$HA_DID', HA_DID)
+            try:
+                conversation = agent_utils.send_proof_request(wallet, user_connection, proof_uuid, json.dumps(proof_name), json.loads(proof_attrs), json.loads(proof_predicates))
+            except Exception as e:
+                # ignore errors for now
+                print(" >>> Failed to update conversation for", wallet.wallet_name)
+                print(e)
+                return render(request, 'indy/form_response.html', {'msg': 'Failed to update conversation for ' + wallet.wallet_name})
+
+            imms_conversation = ImmunizationConversation(
+                    wallet=wallet,
+                    wallet_role=org_role,
+                    health_id_proof=conversation,
+                    status='Sent',
+                    initiation_date=datetime.now().date()
+                )
+            imms_conversation.save()
+
+            return render(request, 'indy/form_response.html', {'msg': 'Issued Health Identity Proof Request'})
+
     else:
         wallet = indy_views.wallet_for_current_session(request)
         connection_id = request.GET.get('id', None)

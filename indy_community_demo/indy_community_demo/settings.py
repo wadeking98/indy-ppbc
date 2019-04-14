@@ -62,6 +62,11 @@ INDY_CONFIG = {
     'ledger_url': 'http://localhost:9000',
 }
 
+# note these are "well-known DIDs" for our demo - ideally they would be configured or by lookup ...
+FABER_SCHOOL_DID = 'KJKW5xiNXeGHLhXeMwH1pk'
+ISLAND_HA_DID = 'D3JAphtsPrPjA79YuA2dns'
+ISLAND_IMMS_REPO_DID = '8j1DkZ1BC8aRJgQVq5r8ZE'
+
 INDY_PROFILE_VIEW = 'imms_demo.views.profile_view'
 INDY_ORG_DATA_VIEW = 'imms_demo.views.data_view'
 INDY_WALLET_VIEW = 'imms_demo.views.wallet_view'
