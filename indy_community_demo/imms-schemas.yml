@@ -30,10 +30,13 @@ HA Immunization Consent Enablement:
   issuing_roles:
     - School
   attributes:
+    - imms_first_name
+    - imms_last_name
     - imms_health_id
     - consenting_health_id
     - consent_data
     - consent_type
+    - consent_ttl
 HA Proof of Health Identity:
   type: proof_request
   description: Reveals child name and parent and child Health IDs
@@ -47,11 +50,16 @@ HA Proof of Immunization Consent:
   description: Proof that a parent has consented to share child's immunization status
   revealed_attributes:
     - {'name':'health_id', 'restrictions':[{'issuer_did': '$HA_DID'}]}
+    - {'name':'first_name', 'restrictions':[{'issuer_did': '$HA_DID'}]}
+    - {'name':'last_name', 'restrictions':[{'issuer_did': '$HA_DID'}]}
     - {'name':'parent_health_id', 'restrictions':[{'issuer_did': '$HA_DID'}]}
     - {'name':'imms_health_id', 'restrictions':[{'issuer_did': '$SCHOOL_DID'}]}
+    - {'name':'imms_first_name', 'restrictions':[{'issuer_did': '$SCHOOL_DID'}]}
+    - {'name':'imms_last_name', 'restrictions':[{'issuer_did': '$SCHOOL_DID'}]}
     - {'name':'consenting_health_id', 'restrictions':[{'issuer_did': '$SCHOOL_DID'}]}
     - {'name':'consent_data', 'restrictions':[{'issuer_did': '$SCHOOL_DID'}]}
     - {'name':'consent_type', 'restrictions':[{'issuer_did': '$SCHOOL_DID'}]}
+    - {'name':'consent_ttl', 'restrictions':[{'issuer_did': '$SCHOOL_DID'}]}
     - {'name':'user_comments'}
 HA Proof of Immunization:
   type: proof_request

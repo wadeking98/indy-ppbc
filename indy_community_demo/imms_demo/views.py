@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.conf import settings
 
+from datetime import datetime, date, timedelta
 import uuid
 
 import indy_community.models as indy_models
@@ -11,7 +12,19 @@ from .models import *
 from .forms import *
 
 
+# well-known DID's and org names
 HA_DID = getattr(settings, "ISLAND_HA_DID", None)
+HA_NAME = 'Island Health Authority'
+IMMS_REPO_NAME = 'Island Health Imms Repo'
+
+# credential names
+HA_IDENTITY_CREDENIAL = 'HA Identity Certificate'
+SCHOOL_IMMS_CONSENT = 'HA Immunization Consent Enablement'
+
+# proof request names
+HA_IDENTITY_PROOF = 'HA Proof of Health Identity'
+SCHOOL_IMMS_PROOF = 'HA Proof of Immunization Consent'
+REPO_CONSENT_PROOF = 'HA Proof of Immunization'
 
 ########################################################################
 # Create your views here.
@@ -26,12 +39,12 @@ def wallet_view(request):
 
 def ha_data_view(request, org):
     wallet = indy_views.wallet_for_current_session(request)
-    repo_connections = indy_models.AgentConnection.objects.filter(wallet=wallet, status='Active', partner_name='Island Health Imms Repo').all()
+    repo_connections = indy_models.AgentConnection.objects.filter(wallet=wallet, status='Active', partner_name=IMMS_REPO_NAME).all()
     if 0 < len(repo_connections):
         repo_connection = repo_connections[0]
     else:
         repo_connection = None
-    user_connections = indy_models.AgentConnection.objects.filter(wallet=wallet, status='Active').exclude(partner_name='Island Health Imms Repo').all()
+    user_connections = indy_models.AgentConnection.objects.filter(wallet=wallet, status='Active').exclude(partner_name=IMMS_REPO_NAME).all()
     for connection in user_connections:
         print("connection", connection)
         for conversation in connection.agentconversation_set.all():
@@ -46,12 +59,12 @@ def ha_data_view(request, org):
 
 def school_data_view(request, org):
     wallet = indy_views.wallet_for_current_session(request)
-    repo_connections = indy_models.AgentConnection.objects.filter(wallet=wallet, status='Active', partner_name='Island Health Imms Repo').all()
+    repo_connections = indy_models.AgentConnection.objects.filter(wallet=wallet, status='Active', partner_name=IMMS_REPO_NAME).all()
     if 0 < len(repo_connections):
         repo_connection = repo_connections[0]
     else:
         repo_connection = None
-    user_connections = indy_models.AgentConnection.objects.filter(wallet=wallet, status='Active').exclude(partner_name='Island Health Imms Repo').all()
+    user_connections = indy_models.AgentConnection.objects.filter(wallet=wallet, status='Active').exclude(partner_name=IMMS_REPO_NAME).all()
     for connection in user_connections:
         print("connection", connection)
         for conversation in connection.agentconversation_set.all():
@@ -105,7 +118,7 @@ def ha_issue_credentials(request):
             immunization_status_date = cd.get('immunization_status_date').strftime('%Y-%m-%d')
 
             wallet = indy_views.wallet_for_current_session(request)
-            repo_connections = indy_models.AgentConnection.objects.filter(wallet=wallet, status='Active', partner_name='Island Health Imms Repo').all()
+            repo_connections = indy_models.AgentConnection.objects.filter(wallet=wallet, status='Active', partner_name=IMMS_REPO_NAME).all()
             if 0 < len(repo_connections):
                 repo_connection = repo_connections[0]
             else:
@@ -117,7 +130,7 @@ def ha_issue_credentials(request):
                 return render(request, 'indy/form_response.html', {'msg': 'Form error', 'msg_txt': "Can't issue credentials, no User Connection"})
 
             if user_connection:
-                hi_cred_defs = indy_models.IndyCredentialDefinition.objects.filter(wallet=wallet, creddef_name='HA Identity Certificate'+'-'+wallet.wallet_name).all()
+                hi_cred_defs = indy_models.IndyCredentialDefinition.objects.filter(wallet=wallet, creddef_name=HA_IDENTITY_CREDENIAL+'-'+wallet.wallet_name).all()
                 if 0 < len(hi_cred_defs):
                     hi_cred_def = hi_cred_defs[0]
                 else:
@@ -232,7 +245,7 @@ def school_request_health_id(request):
                 return render(request, 'indy/form_response.html', {'msg': 'Form error', 'msg_txt': "Can't issue proof, no User Connection"})
 
             # find proof request
-            proof_requests = indy_models.IndyProofRequest.objects.filter(proof_req_name='HA Proof of Health Identity').all()
+            proof_requests = indy_models.IndyProofRequest.objects.filter(proof_req_name=HA_IDENTITY_PROOF).all()
             if 0 < len(proof_requests):
                 proof_request = proof_requests[0]
             else:
@@ -241,7 +254,7 @@ def school_request_health_id(request):
             # build the proof request and send
             proof_uuid = str(uuid.uuid4())
             proof_name = {
-                        'type': 'HA Proof of Health Identity',
+                        'type': HA_IDENTITY_PROOF,
                         'first_name_child': first_name_child,
                         'last_name_child': last_name_child,
                         'first_name_parent': first_name_parent,
@@ -293,11 +306,153 @@ def ha_conversation_callback(conversation, prev_type, prev_status, org):
 def school_conversation_callback(conversation, prev_type, prev_status, org):
     print("School conversation callback", prev_type, prev_status, conversation.conversation_type, conversation.status, org)
 
-    # if received proof request from Individual (health id's), auto-issue Consent Cred and Imms Proof Request
+    if conversation.conversation_type == 'ProofRequest':
+        # if received Imms Proof Request from School, auto-send proof request to Individual
+        if conversation.connection.partner_name == HA_NAME:
+            # if received Imms Proof, update status
+            print("Proof request from HA")
 
-    # if received Imms Proof, update status
+        else:
+            print("Proof request from", conversation.connection.partner_name)
 
-    pass
+            # find associated Imms Conversation
+            imms_conversation = conversation.health_id_proof.get()
+            if imms_conversation is None:
+                print(" >>> not part of an immunization status protocol, skipping")
+                return
+            
+            # if received proof request from Individual (health id's), auto-issue Consent Cred and Imms Proof Request
+            conversation_data = json.loads(conversation.conversation_data)
+            proof_data = json.loads(conversation_data['data']['proof']['libindy_proof'])
+            proof_request = conversation_data['data']['proof_request']
+            proof_req_name = proof_request['proof_request_data']['name']
+            try:
+                proof_req_name = json.loads(proof_req_name)
+            except Exception as e:
+                # ignore errors for now
+                imms_conversation.status = "Error"
+                imms_conversation.msg = "Error in proof_req_name " + proof_req_name
+                imms_conversation.save()
+                print(" >>> Failed to update conversation,", wallet.wallet_name, imms_conversation.msg)
+                print(e)
+                return
+
+            # validate data in proof request name
+            if proof_req_name['type'] != HA_IDENTITY_PROOF:
+                imms_conversation.status = "Error"
+                imms_conversation.msg = "Error wrong proof type " + proof_req_name
+                imms_conversation.save()
+                print(" >>> Failed to update conversation", wallet.wallet_name, imms_conversation.msg)
+                return
+            if 1 != len(proof_data['proof']['proofs']):
+                imms_conversation.status = "Error"
+                imms_conversation.msg = "Error data from multiple credentials"
+                imms_conversation.save()
+                print(" >>> Failed to update conversation", wallet.wallet_name, imms_conversation.msg)
+                return
+
+            first_name = proof_data['requested_proof']['revealed_attrs']['first_name']['raw']
+            last_name = proof_data['requested_proof']['revealed_attrs']['last_name']['raw']
+            health_id = proof_data['requested_proof']['revealed_attrs']['health_id']['raw']
+            parent_health_id = proof_data['requested_proof']['revealed_attrs']['parent_health_id']['raw']
+            if first_name != proof_req_name['first_name_child'] or last_name != proof_req_name['last_name_child']:
+                imms_conversation.status = "Error"
+                imms_conversation.msg = "Error child name does not match"
+                imms_conversation.save()
+                print(" >>> Failed to update conversation", wallet.wallet_name, imms_conversation.msg)
+                return
+
+            # ok now construct consent enablement credential (for parent)
+            user_connection = conversation.connection
+            wallet = user_connection.wallet
+            hi_cred_defs = indy_models.IndyCredentialDefinition.objects.filter(wallet=wallet, creddef_name=SCHOOL_IMMS_CONSENT+'-'+wallet.wallet_name).all()
+            if 0 < len(hi_cred_defs):
+                hi_cred_def = hi_cred_defs[0]
+            else:
+                imms_conversation.status = "Error"
+                imms_conversation.msg = "Error no credential defintion for immunization consent"
+                imms_conversation.save()
+                print(" >>> Failed to update conversation", wallet.wallet_name, imms_conversation.msg)
+                return
+
+            hi_cred_name = first_name + ' ' + last_name
+            hi_cred_tag = first_name + ' ' + last_name
+            hi_cred_attrs = {
+                        "imms_first_name": first_name,
+                        "imms_last_name": last_name,
+                        "imms_health_id": health_id,
+                        "consenting_health_id": parent_health_id,
+                        "consent_data": "Consent to release child's immunization status to school",
+                        "consent_type": "View Status",
+                        "consent_ttl": (datetime.now()+timedelta(days=5)).date().strftime('%Y-%m-%d'),
+                    }
+
+            try:
+                print(" >>> sending immunization consent credential")
+                hi_conversation = agent_utils.send_credential_offer(wallet, user_connection, hi_cred_tag, hi_cred_attrs, hi_cred_def, hi_cred_name, initialize_vcx=False)
+            except Exception as e:
+                imms_conversation.status = "Error"
+                imms_conversation.msg = "Error failed to send immunization consent credential"
+                imms_conversation.save()
+                print(" >>> Failed to update conversation for", wallet.wallet_name)
+                print(e)
+                return
+
+            imms_conversation.consent_enablement = hi_conversation
+            imms_conversation.save()
+
+            # ... and immunization status proof request (for imms repository)
+            repo_connections = indy_models.AgentConnection.objects.filter(wallet=wallet, status='Active', partner_name=IMMS_REPO_NAME).all()
+            if 0 < len(repo_connections):
+                repo_connection = repo_connections[0]
+            else:
+                imms_conversation.status = "Error"
+                imms_conversation.msg = "Error failed to send immunization status proof, no imms repo connection"
+                imms_conversation.save()
+                print(" >>> Failed to update conversation for", wallet.wallet_name)
+                return
+
+            proof_requests = indy_models.IndyProofRequest.objects.filter(proof_req_name=SCHOOL_IMMS_PROOF).all()
+            if 0 < len(proof_requests):
+                proof_request = proof_requests[0]
+            else:
+                return render(request, 'indy/form_response.html', {'msg': 'Form error', 'msg_txt': "Can't issue proof, proof request not found"})
+
+            # build the proof request and send
+            proof_uuid = str(uuid.uuid4())
+            proof_name = {
+                        'type': SCHOOL_IMMS_PROOF,
+                        'imms_first_name': first_name,
+                        'imms_last_name': last_name,
+                        'imms_health_id': health_id,
+                        'first_name_consent': proof_req_name['first_name_parent'],
+                        'last_name_consent': proof_req_name['last_name_parent'],
+                        'health_id_consent': parent_health_id
+                    }
+            proof_attrs = proof_request.proof_req_attrs
+            proof_predicates = proof_request.proof_req_predicates
+            proof_attrs = proof_attrs.replace('$HA_DID', HA_DID)
+            proof_predicates = proof_predicates.replace('$HA_DID', HA_DID)
+            connection_data = json.loads(repo_connection.connection_data)
+            my_did = connection_data['data']['public_did']
+            proof_attrs = proof_attrs.replace('$SCHOOL_DID', my_did)
+            proof_predicates = proof_predicates.replace('$SCHOOL_DID', my_did)
+            try:
+                proof_conversation = agent_utils.send_proof_request(wallet, repo_connection, proof_uuid, json.dumps(proof_name), json.loads(proof_attrs), json.loads(proof_predicates), initialize_vcx=False)
+            except Exception as e:
+                imms_conversation.status = "Error"
+                imms_conversation.msg = "Error failed to send immunization status proof request"
+                imms_conversation.save()
+                print(" >>> Failed to update conversation for", wallet.wallet_name)
+                print(e)
+                return
+
+            imms_conversation.imms_status_proof = proof_conversation
+            imms_conversation.save()
+
+    else:
+        # ignore others for now ...
+        pass
     
 
 def repo_conversation_callback(conversation, prev_type, prev_status, org):
@@ -307,7 +462,7 @@ def repo_conversation_callback(conversation, prev_type, prev_status, org):
 
     # if received Imms Credential from HA, auto-accept
     if conversation.conversation_type == 'CredentialOffer':
-        if connection.partner_name == 'Island Health Authority':
+        if connection.partner_name == HA_NAME:
             print("Credential offer from HA")
             try:
                 # note vcx library is initialized since we are in the "process received messages" loop
@@ -323,7 +478,7 @@ def repo_conversation_callback(conversation, prev_type, prev_status, org):
 
     elif conversation.conversation_type == 'ProofRequest':
         # if received Imms Proof Request from School, auto-send proof request to Individual
-        if conversation.connection.partner_name == 'Island Health Authority':
+        if conversation.connection.partner_name == HA_NAME:
             print("Proof request from HA")
 
         else:

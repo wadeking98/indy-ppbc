@@ -17,6 +17,7 @@ class ImmunizationConversation(models.Model):
     # for the repo - a reference to the consent proof from the parent
     imms_consent_proof = models.ForeignKey(AgentConversation, related_name='imms_consent_proof', blank = True, null=True, on_delete=models.CASCADE)
     status = models.CharField(max_length=20)
+    msg = models.CharField(max_length=200, blank = True, null=True)
     initiation_date = models.DateField()
 
     def __str__(self):
