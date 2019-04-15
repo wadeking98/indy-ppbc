@@ -16,6 +16,7 @@ from .forms import *
 HA_DID = getattr(settings, "ISLAND_HA_DID", None)
 HA_NAME = 'Island Health Authority'
 IMMS_REPO_NAME = HA_NAME
+SCHOOL_DID = getattr(settings, "FABER_SCHOOL_DID", None)
 SCHOOL_NAME = 'Faber Secondary School'
 
 # credential names
@@ -412,7 +413,11 @@ def school_auto_receive_proofs(conversation, prev_type, prev_status, org):
         if 0 < len(proof_requests):
             proof_request = proof_requests[0]
         else:
-            return render(request, 'indy/form_response.html', {'msg': 'Form error', 'msg_txt': "Can't issue proof, proof request not found"})
+            imms_conversation.status = "Error"
+            imms_conversation.msg = "Error failed to send proof, no proof request"
+            imms_conversation.save()
+            print(" >>> Failed to update conversation for", wallet.wallet_name)
+            return
 
         # build the proof request and send
         proof_uuid = str(uuid.uuid4())
@@ -502,7 +507,7 @@ def repository_auto_answer_proof_requests(conversation, prev_type, prev_status, 
     print("conversation_data", conversation_data)
     proof_request = conversation_data['proof_request_data']
     print("proof_request", proof_request)
-    proof_req_name = proof_request['proof_request_data']['name']
+    proof_req_name = proof_request['name']
     print("proof_req_name", proof_req_name)
     try:
         proof_req_name = json.loads(proof_req_name)
@@ -524,21 +529,65 @@ def repository_auto_answer_proof_requests(conversation, prev_type, prev_status, 
         print(" >>> Failed to update conversation", wallet.wallet_name, imms_conversation.msg)
         return
 
-    # need to send proof request to parent = how to determine which connection is for the Parent?
+    # need to send proof request to parent = find connection for the parent
     print("send proof request to parent for consent ...")
     consenting_health_id = proof_req_name['health_id_consent']
     consenting_identity = HealthIdentity.objects.filter(health_id=consenting_health_id).all()
     if 0 < len(consenting_identity):
+        consenting_identity = consenting_identity[0]
+    else:
         imms_conversation.status = "Error"
-        imms_conversation.msg = "Consenting identity not found " + proof_req_name
+        imms_conversation.msg = "Consenting identity not found " + str(proof_req_name)
         imms_conversation.save()
         print(" >>> Failed to update conversation", wallet.wallet_name, imms_conversation.msg)
         return
-    consenting_identity = consenting_identity[0]
     consenting_connection = consenting_identity.last_issued.connection
 
-    print("TODO send proof to parent for consent", connection.partner_name)
+    print("Send proof to parent for consent", connection.partner_name)
+    proof_requests = indy_models.IndyProofRequest.objects.filter(proof_req_name=REPO_CONSENT_PROOF).all()
+    if 0 < len(proof_requests):
+        proof_request = proof_requests[0]
+    else:
+        imms_conversation.status = "Error"
+        imms_conversation.msg = "Error failed to send proof, no proof request"
+        imms_conversation.save()
+        print(" >>> Failed to update conversation for", wallet.wallet_name)
+        return
 
+    # build the proof request and send
+    proof_uuid = str(uuid.uuid4())
+    proof_name = {
+                'type': REPO_CONSENT_PROOF,
+                'imms_first_name': proof_req_name['imms_first_name'],
+                'imms_last_name': proof_req_name['imms_last_name'],
+                'imms_health_id': proof_req_name['imms_health_id'],
+                'first_name_consent': proof_req_name['first_name_consent'],
+                'last_name_consent': proof_req_name['last_name_consent'],
+                'health_id_consent': proof_req_name['health_id_consent']
+            }
+    proof_attrs = proof_request.proof_req_attrs
+    proof_predicates = proof_request.proof_req_predicates
+    proof_attrs = proof_attrs.replace('$HA_DID', HA_DID)
+    proof_predicates = proof_predicates.replace('$HA_DID', HA_DID)
+    school_connection_data = json.loads(conversation.connection.connection_data)
+    # TODO maybe pass this in the proof name as a parameter ...
+    school_did = SCHOOL_DID 
+    proof_attrs = proof_attrs.replace('$SCHOOL_DID', school_did)
+    proof_predicates = proof_predicates.replace('$SCHOOL_DID', school_did)
+    print("proof_attrs", proof_attrs)
+    try:
+        print(" >>> sending immunization consent proof request")
+        proof_conversation = agent_utils.send_proof_request(wallet, consenting_connection, proof_uuid, json.dumps(proof_name), json.loads(proof_attrs), json.loads(proof_predicates), initialize_vcx=False)
+    except Exception as e:
+        imms_conversation.status = "Error"
+        imms_conversation.msg = "Error failed to send immunization status proof request"
+        imms_conversation.save()
+        print(" >>> Failed to update conversation for", wallet.wallet_name)
+        print(e)
+        return
+
+    imms_conversation.imms_consent_proof = proof_conversation
+    imms_conversation.save()
 
 
 def repository_auto_receive_proofs(conversation, prev_type, prev_status, org):
@@ -549,8 +598,14 @@ def repository_auto_receive_proofs(conversation, prev_type, prev_status, org):
     # if received Imms Proof Request from School, auto-send proof request to Individual
     print("Proof response received from", conversation.connection.partner_name)
 
+    # need to validate consent proof received from parent
+    print("TODO send proof response to school ...")
+
     # need to send proof response to school
     print("TODO send proof response to school ...")
+
+    # need to send proof response to school
+    print("TODO find appropriate imms credential to build proof ...")
 
 
 
