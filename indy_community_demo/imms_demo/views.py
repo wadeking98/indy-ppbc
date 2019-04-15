@@ -485,8 +485,59 @@ def repository_auto_answer_proof_requests(conversation, prev_type, prev_status, 
     # if received Imms Proof Request from School, auto-send proof request to Individual
     print("Proof request from", conversation.connection.partner_name)
 
+    # startup an imms_conversation to track this (3-way) conversation
+    imms_conversation = ImmunizationConversation(
+                    wallet=wallet,
+                    wallet_role=org.role,
+                    imms_status_proof=conversation,
+                    status='Received',
+                    initiation_date=datetime.now().date()
+                )
+    imms_conversation.save()
+    print("Saved imms_conversation")
+
+    # validate the data in the proof request name
+    print("conversation.conversation_data", conversation.conversation_data)
+    conversation_data = json.loads(conversation.conversation_data)
+    print("conversation_data", conversation_data)
+    proof_request = conversation_data['proof_request_data']
+    print("proof_request", proof_request)
+    proof_req_name = proof_request['proof_request_data']['name']
+    print("proof_req_name", proof_req_name)
+    try:
+        proof_req_name = json.loads(proof_req_name)
+    except Exception as e:
+        # ignore errors for now
+        imms_conversation.status = "Error"
+        imms_conversation.msg = "Error in proof_req_name " + proof_req_name
+        imms_conversation.save()
+        print(" >>> Failed to update conversation,", wallet.wallet_name, imms_conversation.msg)
+        print(e)
+        return
+
+    # validate data in proof request name
+    print("proof_req_name", proof_req_name)
+    if proof_req_name['type'] != SCHOOL_IMMS_PROOF:
+        imms_conversation.status = "Error"
+        imms_conversation.msg = "Error wrong proof type " + proof_req_name
+        imms_conversation.save()
+        print(" >>> Failed to update conversation", wallet.wallet_name, imms_conversation.msg)
+        return
+
     # need to send proof request to parent = how to determine which connection is for the Parent?
-    print("TODO send proof request to parent for consent ...")
+    print("send proof request to parent for consent ...")
+    consenting_health_id = proof_req_name['health_id_consent']
+    consenting_identity = HealthIdentity.objects.filter(health_id=consenting_health_id).all()
+    if 0 < len(consenting_identity):
+        imms_conversation.status = "Error"
+        imms_conversation.msg = "Consenting identity not found " + proof_req_name
+        imms_conversation.save()
+        print(" >>> Failed to update conversation", wallet.wallet_name, imms_conversation.msg)
+        return
+    consenting_identity = consenting_identity[0]
+    consenting_connection = consenting_identity.last_issued.connection
+
+    print("TODO send proof to parent for consent", connection.partner_name)
 
 
 
