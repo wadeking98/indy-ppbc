@@ -65,7 +65,7 @@ INDY_CONFIG = {
 # note these are "well-known DIDs" for our demo - ideally they would be configured or by lookup ...
 FABER_SCHOOL_DID = 'KJKW5xiNXeGHLhXeMwH1pk'
 ISLAND_HA_DID = 'D3JAphtsPrPjA79YuA2dns'
-ISLAND_IMMS_REPO_DID = '8j1DkZ1BC8aRJgQVq5r8ZE'
+ISLAND_IMMS_REPO_DID = 'D3JAphtsPrPjA79YuA2dns'
 
 INDY_PROFILE_VIEW = 'imms_demo.views.profile_view'
 INDY_ORG_DATA_VIEW = 'imms_demo.views.data_view'
@@ -80,6 +80,7 @@ INDY_ORGANIZATION_MODEL = 'indy_community.IndyOrganization'
 INDY_ORG_RELATION_MODEL = 'indy_community.IndyOrgRelationship'
 
 INDY_CONVERSATION_CALLBACK = 'imms_demo.views.conversation_callback'
+INDY_CONNECTION_CALLBACK = 'imms_demo.views.connection_callback'
 
 FIXTURE_DIRS = (
    'indy_community_demo/fixtures/',
