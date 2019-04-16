@@ -420,6 +420,8 @@ def school_auto_receive_proofs(conversation, prev_type, prev_status, org):
             return
 
         # build the proof request and send
+        connection_data = json.loads(repo_connection.connection_data)
+        my_did = connection_data['data']['public_did']
         proof_uuid = str(uuid.uuid4())
         proof_name = {
                     'type': SCHOOL_IMMS_PROOF,
@@ -428,14 +430,13 @@ def school_auto_receive_proofs(conversation, prev_type, prev_status, org):
                     'imms_health_id': health_id,
                     'first_name_consent': proof_req_name['first_name_parent'],
                     'last_name_consent': proof_req_name['last_name_parent'],
-                    'health_id_consent': parent_health_id
+                    'health_id_consent': parent_health_id,
+                    'school_did': my_did
                 }
         proof_attrs = proof_request.proof_req_attrs
         proof_predicates = proof_request.proof_req_predicates
         proof_attrs = proof_attrs.replace('$HA_DID', HA_DID)
         proof_predicates = proof_predicates.replace('$HA_DID', HA_DID)
-        connection_data = json.loads(repo_connection.connection_data)
-        my_did = connection_data['data']['public_did']
         proof_attrs = proof_attrs.replace('$SCHOOL_DID', my_did)
         proof_predicates = proof_predicates.replace('$SCHOOL_DID', my_did)
         try:
@@ -570,8 +571,8 @@ def repository_auto_answer_proof_requests(conversation, prev_type, prev_status, 
     proof_attrs = proof_attrs.replace('$HA_DID', HA_DID)
     proof_predicates = proof_predicates.replace('$HA_DID', HA_DID)
     school_connection_data = json.loads(conversation.connection.connection_data)
-    # TODO maybe pass this in the proof name as a parameter ...
-    school_did = SCHOOL_DID 
+    # note the school passes their DID along in the headers ...
+    school_did = proof_req_name['school_did'] 
     proof_attrs = proof_attrs.replace('$SCHOOL_DID', school_did)
     proof_predicates = proof_predicates.replace('$SCHOOL_DID', school_did)
     print("proof_attrs", proof_attrs)
@@ -599,13 +600,15 @@ def repository_auto_receive_proofs(conversation, prev_type, prev_status, org):
     print("Proof response received from", conversation.connection.partner_name)
 
     # need to validate consent proof received from parent
-    print("TODO send proof response to school ...")
+    print("TODO validate consent proof received from parent ...")
 
     # need to send proof response to school
     print("TODO send proof response to school ...")
 
     # need to send proof response to school
     print("TODO find appropriate imms credential to build proof ...")
+
+    print("TODO ... and finally send along the proof")
 
 
 
