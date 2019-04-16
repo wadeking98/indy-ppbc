@@ -1,0 +1,12 @@
+{% load i18n %}
+{% load static %}
+
+{% if org_role == 'HA' %}
+    {% include "imms_demo/pageIncludes/ha_userdata.html" %}
+{% endif %}
+{% if org_role == 'School' %}
+    {% include "imms_demo/pageIncludes/school_userdata.html" %}
+{% endif %}
+{% if org_role == 'Repository' %}
+    {% include "imms_demo/pageIncludes/repo_userdata.html" %}
+{% endif %}

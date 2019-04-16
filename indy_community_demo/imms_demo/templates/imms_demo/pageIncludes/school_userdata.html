@@ -1,0 +1,54 @@
+{% load i18n %}
+{% load static %}
+
+<div class='newsfeed-posted-cont'>
+    <div class='newsfeed-posted-info'>
+        <div>
+            <a href=''>
+                <h2>Requested Health Identities and Immunization Status</h2>
+            </a>
+        </div>
+    </div>
+    <div class='newsfeed-post-seperator'></div>
+
+{% for connection in user_connections %}
+    <div class='newsfeed-posted-top-cont'>
+        <div class='newsfeed-posted-img-info'>
+            <div class='newsfeed-posted-img'>
+                <img src="{% static "/indy/accounticon.png" %}">
+            </div>
+            <div class='newsfeed-posted-info'>
+                <div>
+                    <a href=''>
+                        <h2>{{ connection.partner_name }}</h2>
+                    </a>
+                </div>
+                <div>
+                    <h5>
+                        <a href="{% url 'school_request_health_id' %}?id={{connection.id}}">
+                            Request Health Identity and Immunization Status
+                        </a>
+                    </h5>
+                    {% for immsconversation in connection.agentconversation_set.all %}
+                        {% if immsconversation.health_id_proof.get %}
+                            <h5>
+                                Health ID Proof 
+                                {{ immsconversation.health_id_proof.get.initiation_date }} 
+                                [{{ immsconversation.status }}]
+                                {% if immsconversation.health_id_proof.get.consent_enablement %}
+                                    Immunization Status Issued
+                                    [{{ immsconversation.health_id_proof.get.consent_enablement.status }}] 
+                                    {% if immsconversation.health_id_proof.get.imms_status_proof %}
+                                            Immunization Status Issued
+                                            {{ immsconversation.health_id_proof.get.imms_status_proof.status }} 
+                                    {% endif %}
+                                {% endif %}
+                            </h5>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% empty %}
+{% endfor %}
