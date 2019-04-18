@@ -68,7 +68,7 @@ ISLAND_HA_DID = 'D3JAphtsPrPjA79YuA2dns'
 ISLAND_IMMS_REPO_DID = 'D3JAphtsPrPjA79YuA2dns'
 
 INDY_PROFILE_VIEW = 'imms_demo.views.profile_view'
-INDY_ORG_DATA_VIEW = 'imms_demo.views.data_view'
+INDY_DATA_VIEW = 'imms_demo.views.data_view'
 INDY_WALLET_VIEW = 'imms_demo.views.wallet_view'
 
 BACKGROUND_TASK_RUN_ASYNC = False

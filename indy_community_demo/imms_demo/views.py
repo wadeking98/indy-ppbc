@@ -52,11 +52,14 @@ def ha_data_view(request, org):
         for conversation in connection.agentconversation_set.all():
             print("conversation", conversation)
 
+    imms_status_requests = RepoImmunizationConversation.objects.all()
+
     return render(request, 'imms_demo/imms_data.html', 
                 {'org': org, 
                  'org_role': org.role.name, 
                  'repo_connection': repo_connection,
-                 'user_connections': user_connections})
+                 'user_connections': user_connections,
+                 'imms_status_requests': imms_status_requests})
 
 
 def school_data_view(request, org):
@@ -83,18 +86,26 @@ def repo_data_view(request, org):
     return render(request, 'imms_demo/imms_data.html', {'org': org, 'org_role': org.role.name})
 
 
+def user_data_view(request, user):
+    return render(request, 'imms_demo/imms_data.html', {'user': user, 'org_role': 'User'})
+
+
 # dispatcher
 def data_view(request):
-    org_id = request.session['ACTIVE_ORG']
-    orgs = indy_models.IndyOrganization.objects.filter(id=org_id).all()
+    if 'ACTIVE_ORG' in request.session:
+        org_id = request.session['ACTIVE_ORG']
+        orgs = indy_models.IndyOrganization.objects.filter(id=org_id).all()
 
-    # let's run separate views per org role
-    if orgs[0].role.name == 'HA':
-        return ha_data_view(request, orgs[0])
-    elif orgs[0].role.name == 'School':
-        return school_data_view(request, orgs[0])
-    elif orgs[0].role.name == 'Repository':
-        return repo_data_view(request, orgs[0])
+        # let's run separate views per org role
+        if orgs[0].role.name == 'HA':
+            return ha_data_view(request, orgs[0])
+        elif orgs[0].role.name == 'School':
+            return school_data_view(request, orgs[0])
+        elif orgs[0].role.name == 'Repository':
+            return repo_data_view(request, orgs[0])
+    else:
+        user = request.user
+        return user_data_view(request, user)
 
 
 # Health Authority simultaneously issues Health ID (to individual) and Immunization Status (to Imms Repo)
@@ -275,9 +286,13 @@ def school_request_health_id(request):
                 print(e)
                 return render(request, 'indy/form_response.html', {'msg': 'Failed to update conversation for ' + wallet.wallet_name})
 
-            imms_conversation = ImmunizationConversation(
+            imms_conversation = SchoolImmunizationConversation(
                     wallet=wallet,
                     wallet_role=org_role,
+                    first_name=first_name_child,
+                    last_name=last_name_child,
+                    first_name_parent=first_name_parent,
+                    last_name_parent=last_name_parent,
                     health_id_proof=conversation,
                     status='Sent',
                     initiation_date=datetime.now().date()
@@ -451,7 +466,7 @@ def school_auto_receive_proofs(conversation, prev_type, prev_status, org):
             print(e)
             return
 
-        imms_conversation.imms_status_proof = proof_conversation
+        imms_conversation.imms_status_request = proof_conversation
         imms_conversation.save()
     
 
@@ -493,7 +508,7 @@ def repository_auto_answer_proof_requests(conversation, prev_type, prev_status, 
     print("Proof request from", conversation.connection.partner_name)
 
     # startup an imms_conversation to track this (3-way) conversation
-    imms_conversation = ImmunizationConversation(
+    imms_conversation = RepoImmunizationConversation(
                     wallet=wallet,
                     wallet_role=org.role,
                     imms_status_proof=conversation,
@@ -526,7 +541,10 @@ def repository_auto_answer_proof_requests(conversation, prev_type, prev_status, 
         return
 
     # need to send proof request to parent = find connection for the parent
+    health_id = proof_req_name['imms_health_id']
     consenting_health_id = proof_req_name['health_id_consent']
+    imms_conversation.health_id = health_id
+    imms_conversation.consenting_health_id = consenting_health_id
     consenting_identity = HealthIdentity.objects.filter(health_id=consenting_health_id).all()
     if 0 < len(consenting_identity):
         consenting_identity = consenting_identity[0]
@@ -580,7 +598,7 @@ def repository_auto_answer_proof_requests(conversation, prev_type, prev_status, 
         print(e)
         return
 
-    imms_conversation.imms_consent_proof = proof_conversation
+    imms_conversation.imms_consent_request = proof_conversation
     imms_conversation.save()
 
 
@@ -593,7 +611,7 @@ def repository_auto_receive_proofs(conversation, prev_type, prev_status, org):
     print("Proof response received from", conversation.connection.partner_name)
 
     # find associated Imms Conversation
-    imms_conversation = conversation.imms_consent_proof.get()
+    imms_conversation = conversation.imms_consent_request.get()
     if imms_conversation is None:
         print(" >>> not part of an immunization status protocol, skipping")
         return
@@ -682,7 +700,7 @@ def repository_auto_receive_proofs(conversation, prev_type, prev_status, org):
         print(e)
         return
 
-    imms_conversation.imms_consent_proof = proof_conversation
+    imms_conversation.imms_consent_request = proof_conversation
     imms_conversation.save()
 
 
