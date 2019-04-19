@@ -88,10 +88,10 @@
                         ({{ imms_status_request.consenting_health_id }})
                         Status [{{ imms_status_request.imms_status_proof.status }}]
                     </h4>
-                    {% if imms_status_request.imms_consent_request %}
+                    {% if imms_status_request.imms_consent_proof %}
                     <li><h5>
                         Consent Requested
-                        Status [{{ imms_status_request.imms_consent_request.status }}]
+                        Status [{{ imms_status_request.imms_consent_proof.status }}]
                     </h5>
                     {% endif %}
                 </div>
