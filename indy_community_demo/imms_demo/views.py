@@ -88,7 +88,12 @@ def repo_data_view(request, org):
 
 
 def user_data_view(request, user):
-    return render(request, 'imms_demo/imms_data.html', {'user': user, 'org_role': 'User'})
+    imms_status_requests = UserImmunizationConversation.objects.all()
+
+    return render(request, 'imms_demo/imms_data.html', 
+                {'user': user, 
+                 'org_role': 'User', 
+                 'imms_status_requests': imms_status_requests})
 
 
 # dispatcher
