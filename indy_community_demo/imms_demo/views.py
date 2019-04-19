@@ -25,6 +25,7 @@ SCHOOL_IMMS_CONSENT = 'HA Immunization Consent Enablement'
 
 # proof request names
 HA_IDENTITY_PROOF = 'HA Proof of Health Identity'
+SCHOOL_CONSENT_CRED = 'HA Consent Enablement'
 SCHOOL_IMMS_PROOF = 'HA Proof of Immunization'
 REPO_CONSENT_PROOF = 'HA Proof of Immunization Consent'
 
@@ -52,11 +53,14 @@ def ha_data_view(request, org):
         for conversation in connection.agentconversation_set.all():
             print("conversation", conversation)
 
+    imms_status_requests = RepoImmunizationConversation.objects.all()
+
     return render(request, 'imms_demo/imms_data.html', 
                 {'org': org, 
                  'org_role': org.role.name, 
                  'repo_connection': repo_connection,
-                 'user_connections': user_connections})
+                 'user_connections': user_connections,
+                 'imms_status_requests': imms_status_requests})
 
 
 def school_data_view(request, org):
@@ -83,18 +87,31 @@ def repo_data_view(request, org):
     return render(request, 'imms_demo/imms_data.html', {'org': org, 'org_role': org.role.name})
 
 
+def user_data_view(request, user):
+    imms_status_requests = UserImmunizationConversation.objects.all()
+
+    return render(request, 'imms_demo/imms_data.html', 
+                {'user': user, 
+                 'org_role': 'User', 
+                 'imms_status_requests': imms_status_requests})
+
+
 # dispatcher
 def data_view(request):
-    org_id = request.session['ACTIVE_ORG']
-    orgs = indy_models.IndyOrganization.objects.filter(id=org_id).all()
+    if 'ACTIVE_ORG' in request.session:
+        org_id = request.session['ACTIVE_ORG']
+        orgs = indy_models.IndyOrganization.objects.filter(id=org_id).all()
 
-    # let's run separate views per org role
-    if orgs[0].role.name == 'HA':
-        return ha_data_view(request, orgs[0])
-    elif orgs[0].role.name == 'School':
-        return school_data_view(request, orgs[0])
-    elif orgs[0].role.name == 'Repository':
-        return repo_data_view(request, orgs[0])
+        # let's run separate views per org role
+        if orgs[0].role.name == 'HA':
+            return ha_data_view(request, orgs[0])
+        elif orgs[0].role.name == 'School':
+            return school_data_view(request, orgs[0])
+        elif orgs[0].role.name == 'Repository':
+            return repo_data_view(request, orgs[0])
+    else:
+        user = request.user
+        return user_data_view(request, user)
 
 
 # Health Authority simultaneously issues Health ID (to individual) and Immunization Status (to Imms Repo)
@@ -258,6 +275,7 @@ def school_request_health_id(request):
             proof_uuid = str(uuid.uuid4())
             proof_name = {
                         'type': HA_IDENTITY_PROOF,
+                        'id': proof_uuid,
                         'first_name_child': first_name_child,
                         'last_name_child': last_name_child,
                         'first_name_parent': first_name_parent,
@@ -275,10 +293,14 @@ def school_request_health_id(request):
                 print(e)
                 return render(request, 'indy/form_response.html', {'msg': 'Failed to update conversation for ' + wallet.wallet_name})
 
-            imms_conversation = ImmunizationConversation(
+            imms_conversation = SchoolImmunizationConversation(
                     wallet=wallet,
                     wallet_role=org_role,
-                    health_id_proof=conversation,
+                    first_name=first_name_child,
+                    last_name=last_name_child,
+                    first_name_parent=first_name_parent,
+                    last_name_parent=last_name_parent,
+                    health_id_request=conversation,
                     status='Sent',
                     initiation_date=datetime.now().date()
                 )
@@ -303,7 +325,7 @@ def school_request_health_id(request):
 def school_auto_receive_proofs(conversation, prev_type, prev_status, org):
     print("school_auto_receive_proofs", prev_type, prev_status, conversation.conversation_type, conversation.status, org)
 
-    # if received Imms Proof Request from School, auto-send proof request to Individual
+    # if received Imms Proof Response from Individual, auto-send proof request to HA
     if conversation.connection.partner_name == HA_NAME:
         # if received Imms Proof, update status
         print("Proof request from HA")
@@ -314,7 +336,7 @@ def school_auto_receive_proofs(conversation, prev_type, prev_status, org):
         # TODO check that this is a response to a Health ID check - status etc.
 
         # find associated Imms Conversation
-        imms_conversation = conversation.health_id_proof.get()
+        imms_conversation = conversation.health_id_request.get()
         if imms_conversation is None:
             print(" >>> not part of an immunization status protocol, skipping")
             return
@@ -324,6 +346,7 @@ def school_auto_receive_proofs(conversation, prev_type, prev_status, org):
         proof_data = json.loads(conversation_data['data']['proof']['libindy_proof'])
         proof_request = conversation_data['data']['proof_request']
         proof_req_name = proof_request['proof_request_data']['name']
+        print("proof_req_name", proof_req_name)
         try:
             proof_req_name = json.loads(proof_req_name)
         except Exception as e:
@@ -373,7 +396,14 @@ def school_auto_receive_proofs(conversation, prev_type, prev_status, org):
             print(" >>> Failed to update conversation", wallet.wallet_name, imms_conversation.msg)
             return
 
-        hi_cred_name = first_name + ' ' + last_name
+        hi_cred_name = {
+                    'type': SCHOOL_CONSENT_CRED,
+                    'id': proof_req_name['id'],
+                    'imms_first_name': first_name,
+                    'imms_last_name': last_name,
+                    'first_name_consent': proof_req_name['first_name_parent'],
+                    'last_name_consent': proof_req_name['last_name_parent']
+                }
         hi_cred_tag = first_name + ' ' + last_name
         hi_cred_attrs = {
                     "imms_first_name": first_name,
@@ -387,16 +417,16 @@ def school_auto_receive_proofs(conversation, prev_type, prev_status, org):
 
         try:
             print(" >>> sending immunization consent credential")
-            hi_conversation = agent_utils.send_credential_offer(wallet, user_connection, hi_cred_tag, hi_cred_attrs, hi_cred_def, hi_cred_name, initialize_vcx=False)
+            hi_conversation = agent_utils.send_credential_offer(wallet, user_connection, hi_cred_tag, hi_cred_attrs, hi_cred_def, json.dumps(hi_cred_name), initialize_vcx=False)
         except Exception as e:
             imms_conversation.status = "Error"
             imms_conversation.msg = "Error failed to send immunization consent credential"
             imms_conversation.save()
-            print(" >>> Failed to update conversation for", wallet.wallet_name)
+            print(" >>> Failed to update conversation for", wallet.wallet_name, imms_conversation.msg)
             print(e)
             return
 
-        imms_conversation.consent_enablement = hi_conversation
+        imms_conversation.consent_enablement_offer = hi_conversation
         imms_conversation.save()
 
         # ... and immunization status proof request (for imms repository)
@@ -426,6 +456,7 @@ def school_auto_receive_proofs(conversation, prev_type, prev_status, org):
         proof_uuid = str(uuid.uuid4())
         proof_name = {
                     'type': SCHOOL_IMMS_PROOF,
+                    'id': proof_req_name['id'],
                     'imms_first_name': first_name,
                     'imms_last_name': last_name,
                     'imms_health_id': health_id,
@@ -451,7 +482,7 @@ def school_auto_receive_proofs(conversation, prev_type, prev_status, org):
             print(e)
             return
 
-        imms_conversation.imms_status_proof = proof_conversation
+        imms_conversation.imms_status_request = proof_conversation
         imms_conversation.save()
     
 
@@ -493,7 +524,7 @@ def repository_auto_answer_proof_requests(conversation, prev_type, prev_status, 
     print("Proof request from", conversation.connection.partner_name)
 
     # startup an imms_conversation to track this (3-way) conversation
-    imms_conversation = ImmunizationConversation(
+    imms_conversation = RepoImmunizationConversation(
                     wallet=wallet,
                     wallet_role=org.role,
                     imms_status_proof=conversation,
@@ -526,7 +557,10 @@ def repository_auto_answer_proof_requests(conversation, prev_type, prev_status, 
         return
 
     # need to send proof request to parent = find connection for the parent
+    health_id = proof_req_name['imms_health_id']
     consenting_health_id = proof_req_name['health_id_consent']
+    imms_conversation.health_id = health_id
+    imms_conversation.consenting_health_id = consenting_health_id
     consenting_identity = HealthIdentity.objects.filter(health_id=consenting_health_id).all()
     if 0 < len(consenting_identity):
         consenting_identity = consenting_identity[0]
@@ -552,6 +586,7 @@ def repository_auto_answer_proof_requests(conversation, prev_type, prev_status, 
     proof_uuid = str(uuid.uuid4())
     proof_name = {
                 'type': REPO_CONSENT_PROOF,
+                'id': proof_req_name['id'],
                 'imms_first_name': proof_req_name['imms_first_name'],
                 'imms_last_name': proof_req_name['imms_last_name'],
                 'imms_health_id': proof_req_name['imms_health_id'],
@@ -687,14 +722,118 @@ def repository_auto_receive_proofs(conversation, prev_type, prev_status, org):
 
 
 
-def user_conversation_callback(conversation, prev_type, prev_status, user):
-    print("User conversation callback", prev_type, prev_status, conversation.conversation_type, conversation.status, user)
-    # no special handling for individuals
+def repository_auto_answer_connections(connection, prev_status):
+    print("repository_auto_answer_connections", prev_status, connection.status)
     pass
 
 
-def repository_auto_answer_connections(connection, prev_status):
-    print("repository_auto_answer_connections", prev_status, connection.status)
+def user_auto_receive_credential_offers(conversation, prev_type, prev_status, user):
+    print("user_auto_receive_credential_offers()", prev_type, prev_status, conversation.conversation_type, conversation.status, user)
+    
+    # validate data in credential name
+    wallet = conversation.connection.wallet
+    conversation_data = json.loads(conversation.conversation_data)
+    print("conversation_data", conversation_data)
+    cred_offer_name = conversation_data['claim_name']
+    try:
+        cred_offer_name = json.loads(cred_offer_name)
+    except Exception as e:
+        # ignore errors for now
+        msg = "Error in cred_offer_name " + cred_offer_name
+        print(" >>> Failed to update conversation,", wallet.wallet_name, msg)
+        print(e)
+        return
+
+    # validate data in proof request name
+    print("cred_offer_name", cred_offer_name)
+    if 'id' not in cred_offer_name or 'type' not in cred_offer_name:
+        # ignore errors for now
+        msg = "Error in cred_offer_name " + cred_offer_name
+        print(" >>> Failed to update conversation,", wallet.wallet_name, msg)
+        print(e)
+        return
+
+    proof_req_id = cred_offer_name['id']
+    proof_req_type = cred_offer_name['type']
+
+    # find or create ImmsConversation
+    imms_conversations = UserImmunizationConversation.objects.filter(wallet=wallet, proof_id=proof_req_id).all()
+    if 0 == len(imms_conversations):
+        imms_conversation = UserImmunizationConversation(
+                    wallet=wallet,
+                    proof_id=proof_req_id,
+                    first_name=cred_offer_name['first_name'],
+                    last_name=cred_offer_name['last_name'],
+                    first_name_parent=cred_offer_name['first_name_parent'],
+                    last_name_parent=cred_offer_name['last_name_parent'],
+                    status='Received',
+                    initiation_date=datetime.now().date()
+            )
+        imms_conversation.save()
+    else:
+        imms_conversation = imms_conversations[0]
+
+    imms_conversation.consent_enablement = conversation
+    imms_conversation.save()
+
+
+def user_auto_receive_proof_requests(conversation, prev_type, prev_status, user):
+    print("user_auto_receive_proof_requests()", prev_type, prev_status, conversation.conversation_type, conversation.status, user)
+
+    # validate the data in the proof request name
+    wallet = conversation.connection.wallet
+    conversation_data = json.loads(conversation.conversation_data)
+    proof_request = conversation_data['proof_request_data']
+    proof_req_name = proof_request['name']
+    try:
+        proof_req_name = json.loads(proof_req_name)
+    except Exception as e:
+        # ignore errors for now
+        msg = "Error in proof_req_name " + proof_req_name
+        print(" >>> Failed to update conversation,", wallet.wallet_name, msg)
+        print(e)
+        return
+
+    # validate data in proof request name
+    print("proof_req_name", proof_req_name)
+    proof_req_id = proof_req_name['id']
+    proof_req_type = proof_req_name['type']
+
+    # find or create ImmsConversation
+    imms_conversations = UserImmunizationConversation.objects.filter(wallet=wallet, proof_id=proof_req_id).all()
+    if 0 == len(imms_conversations):
+        if proof_req_type == HA_IDENTITY_PROOF:
+            imms_conversation = UserImmunizationConversation(
+                        wallet=wallet,
+                        proof_id=proof_req_id,
+                        first_name=proof_req_name['first_name_child'],
+                        last_name=proof_req_name['last_name_child'],
+                        first_name_parent=proof_req_name['first_name_parent'],
+                        last_name_parent=proof_req_name['last_name_parent'],
+                        status='Received',
+                        initiation_date=datetime.now().date()
+                )
+        elif proof_req_type == REPO_CONSENT_PROOF:
+            imms_conversation = UserImmunizationConversation(
+                        wallet=wallet,
+                        proof_id=proof_req_id,
+                        first_name=proof_req_name['imms_first_name'],
+                        last_name=proof_req_name['imms_last_name'],
+                        first_name_parent=proof_req_name['first_name_consent'],
+                        last_name_parent=proof_req_name['last_name_consent'],
+                        status='Received',
+                        initiation_date=datetime.now().date()
+                )
+        imms_conversation.save()
+    else:
+        imms_conversation = imms_conversations[0]
+
+    if proof_req_type == HA_IDENTITY_PROOF:
+        imms_conversation.health_id_proof = conversation
+        imms_conversation.save()
+    elif proof_req_type == REPO_CONSENT_PROOF:
+        imms_conversation.imms_consent_request = conversation
+        imms_conversation.save()
 
 
 DISPATCH_TABLE = {
@@ -733,7 +872,12 @@ DISPATCH_TABLE = {
         }
     },
     'User': {
-        # no special handling for user events
+        # Check for consent offer credentials
+        'CredentialOffer': user_auto_receive_credential_offers,
+        # Check for consent-related proof requests from School and Imms Repo
+        'ProofRequest': {
+            'Pending': user_auto_receive_proof_requests,
+        }
     }
 }
 

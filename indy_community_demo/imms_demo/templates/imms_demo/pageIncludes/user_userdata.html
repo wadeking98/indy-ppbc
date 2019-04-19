@@ -1,0 +1,50 @@
+{% load i18n %}
+{% load static %}
+
+<div class='newsfeed-posted-cont'>
+    <div class='newsfeed-posted-info'>
+        <div>
+            <a href=''>
+                <h2>Requested Immunization Consents</h2>
+            </a>
+        </div>
+    </div>
+    <div class='newsfeed-post-seperator'></div>
+
+{% for imms_status_request in imms_status_requests %}
+    <div class='newsfeed-posted-top-cont'>
+        <div class='newsfeed-posted-img-info'>
+            <div class='newsfeed-posted-img'>
+                <img src="{% static "/indy/accounticon.png" %}">
+            </div>
+            <div class='newsfeed-posted-info'>
+                <div>
+                    <a href=''>
+                        <h2>{{ imms_status_request.health_id_proof.connection.partner_name }}</h2>
+                    </a>
+                </div>
+                <div>
+                    <h4>
+                        {{ imms_status_request.first_name }} {{ imms_status_request.last_name }}
+                        Status [{{ imms_status_request.health_id_proof.status }}]
+                    </h4>
+                    {% if imms_status_request.consent_enablement %}
+                    <li><h5>
+                        Consent Credential Offered
+                        Status [{{ imms_status_request.consent_enablement.status }}]
+                    </h5>
+                    {% endif %}
+                    {% if imms_status_request.imms_consent_request %}
+                    <li><h5>
+                        Consent Requested
+                        Status [{{ imms_status_request.imms_consent_request.status }}]
+                    </h5>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class='newsfeed-post-seperator'></div>
+{% empty %}
+{% endfor %}
+</div>

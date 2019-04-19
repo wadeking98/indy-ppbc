@@ -26,29 +26,39 @@
                 <div>
                     <h5>
                         <a href="{% url 'school_request_health_id' %}?id={{connection.id}}">
-                            Request Health Identity and Immunization Status
+                            >>> Request Health Identity and Immunization Status
                         </a>
                     </h5>
                     {% for immsconversation in connection.agentconversation_set.all %}
-                        {% if immsconversation.health_id_proof.get %}
-                            <h5>
-                                Health ID Proof 
-                                {{ immsconversation.health_id_proof.get.initiation_date }} 
+                        {% if immsconversation.health_id_request.get %}
+                            <h4>
+                                {{ immsconversation.health_id_request.get.first_name }}
+                                {{ immsconversation.health_id_request.get.last_name }}
+                            </h4>
+                            <li><h5>
+                                Health ID Proof Requested 
+                                {{ immsconversation.health_id_request.get.initiation_date }} 
                                 [{{ immsconversation.status }}]
-                                {% if immsconversation.health_id_proof.get.consent_enablement %}
-                                    Immunization Status Issued
-                                    [{{ immsconversation.health_id_proof.get.consent_enablement.status }}] 
-                                    {% if immsconversation.health_id_proof.get.imms_status_proof %}
-                                            Immunization Status Issued
-                                            {{ immsconversation.health_id_proof.get.imms_status_proof.status }} 
-                                    {% endif %}
-                                {% endif %}
                             </h5>
+                            {% if immsconversation.health_id_request.get.consent_enablement_offer %}
+                            <li><h5>
+                                Consent Enablement Sent 
+                                [{{ immsconversation.health_id_request.get.consent_enablement_offer.status }}] 
+                            </h5>
+                            {% endif %}
+                            {% if immsconversation.health_id_request.get.imms_status_request %}
+                            <li><h5>
+                                Immunization Status Requested
+                                [{{ immsconversation.health_id_request.get.imms_status_request.status }}] 
+                            </h5>
+                            {% endif %}
                         {% endif %}
                     {% endfor %}
                 </div>
             </div>
         </div>
     </div>
+    <div class='newsfeed-post-seperator'></div>
 {% empty %}
 {% endfor %}
+</div>

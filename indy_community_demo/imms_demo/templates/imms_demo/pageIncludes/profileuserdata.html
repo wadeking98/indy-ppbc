@@ -10,3 +10,6 @@
 {% if org_role == 'Repository' %}
     {% include "imms_demo/pageIncludes/repo_userdata.html" %}
 {% endif %}
+{% if org_role == 'User' %}
+    {% include "imms_demo/pageIncludes/user_userdata.html" %}
+{% endif %}

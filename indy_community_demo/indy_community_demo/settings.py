@@ -68,8 +68,11 @@ ISLAND_HA_DID = 'D3JAphtsPrPjA79YuA2dns'
 ISLAND_IMMS_REPO_DID = 'D3JAphtsPrPjA79YuA2dns'
 
 INDY_PROFILE_VIEW = 'imms_demo.views.profile_view'
-INDY_ORG_DATA_VIEW = 'imms_demo.views.data_view'
+INDY_DATA_VIEW = 'imms_demo.views.data_view'
 INDY_WALLET_VIEW = 'imms_demo.views.wallet_view'
+
+INDY_CONVERSATION_CALLBACK = 'imms_demo.views.conversation_callback'
+INDY_CONNECTION_CALLBACK = 'imms_demo.views.connection_callback'
 
 BACKGROUND_TASK_RUN_ASYNC = False
 BACKGROUND_TASK_ASYNC_THREADS = 1
@@ -78,9 +81,6 @@ MAX_ATTEMPTS = 1
 AUTH_USER_MODEL = 'indy_community.IndyUser'
 INDY_ORGANIZATION_MODEL = 'indy_community.IndyOrganization'
 INDY_ORG_RELATION_MODEL = 'indy_community.IndyOrgRelationship'
-
-INDY_CONVERSATION_CALLBACK = 'imms_demo.views.conversation_callback'
-INDY_CONNECTION_CALLBACK = 'imms_demo.views.connection_callback'
 
 FIXTURE_DIRS = (
    'indy_community_demo/fixtures/',
