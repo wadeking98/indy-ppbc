@@ -12,6 +12,6 @@ django-background-tasks
 aiohttp~=3.3.0
 pyyaml
 #django-indy-community
-file:///Users/icostanzo/Projects/django-indy-community/distro/dist/django-indy-community-0.1.7.tar.gz
+file:///Users/icostanzo/Projects/django-indy-community/distro/dist/django-indy-community-0.1.8.tar.gz
 
 

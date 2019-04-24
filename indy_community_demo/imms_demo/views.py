@@ -624,7 +624,7 @@ def repository_auto_receive_proofs(conversation, prev_type, prev_status, org):
     connection = conversation.connection
     wallet = connection.wallet
 
-    # if received Imms Proof Request from School, auto-send proof request to Individual
+    # if received Imms Proof response from Individual, auto-send Imms Status Proof to school (based on prior request)
     print("Proof response received from", conversation.connection.partner_name)
 
     # find associated Imms Conversation
@@ -688,19 +688,18 @@ def repository_auto_receive_proofs(conversation, prev_type, prev_status, org):
     imms_status_proof_connection = imms_status_proof_conversation.connection
 
     # TODO add support to VCX for "extra query parameters" to limit result set to the requested health_id
-    claim_data = agent_utils.get_claims_for_proof_request(wallet, imms_status_proof_connection, imms_status_proof_conversation, initialize_vcx=False)
+    # TODO eventually should be filtered using "extra query parameters" in VCX
+    claim_data = agent_utils.get_claims_for_proof_request(wallet, imms_status_proof_connection, imms_status_proof_conversation, additional_filters={'health_id':health_id}, initialize_vcx=False)
     print("Claims fetched to satisfy proof:::", claim_data)
     credential_attrs = {}
     for attr in claim_data['attrs']:
         # build array of credential id's (from wallet)
         claims = claim_data['attrs'][attr]
         if 0 < len(claims):
-            for claim in claims:
-                # TODO this should be filtered using "extra query parameters" in VCX
-                if claim['cred_info']['attrs']['health_id'] == health_id:
-                    credential_attrs[attr] = {'referent': claims[0]['cred_info']['referent']}
+            # if more than one just grab the first (based on the above filtering logic)
+            credential_attrs[attr] = {'referent': claims[0]['cred_info']['referent']}
         else:
-            # if no claim available, use supplied self-attested value (TODO figure out how to get this)
+            # if no claim available, use supplied self-attested value (TODO figure out how to get this from user proof)
             credential_attrs[attr] = {'value': 'user-supplied value'}
     # end TODO add support to VCX ...
 
