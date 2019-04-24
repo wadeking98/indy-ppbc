@@ -33,6 +33,8 @@ usage() {
 
       django - run python manage.py commands, such as loads_schemas and loads_orgs, and shell
 
+      shell/shell2 - run bash shell
+
       logs - Display the logs from the docker compose run (ctrl-c to exit).
 
       stop - Stops the services.  This is a non-destructive process.  The volumes and containers
@@ -244,12 +246,17 @@ rm|down)
 shell)
   _startupParams=$(getStartupParams $@)
   configureEnvironment $@
-  docker-compose run indy-django bash
+  docker-compose run indy-shell bash
+  ;;
+shell2)
+  _startupParams=$(getStartupParams $@)
+  configureEnvironment $@
+  docker-compose run indy-shell2 bash
   ;;
 cli)
   _startupParams=$(getStartupParamsCli $@)
   configureEnvironment $@
-  docker-compose run cli 
+  docker-compose run indy-cli 
   ;;
 django)
   _startupParams=$(getStartupParams $@)

@@ -29,6 +29,37 @@ services:
         sleep 5;
         DJANGO_SETTINGS_MODULE=indy_community_demo.docker_settings python manage.py process_tasks;"
 
+  indy-shell:
+    image: anonsolutions/indy-community
+    networks:
+      - anon
+      - von
+    ports:
+      - 8001:8000
+    volumes:
+      - "..:/home/indy/indy-community-demo"
+    depends_on:
+      - dummy-cloud-agent
+      - wallet-db
+      - indy-shell2
+    command: 
+      - /bin/bash
+
+  indy-shell2:
+    image: anonsolutions/indy-community
+    networks:
+      - anon
+      - von
+    ports:
+      - 8001:8000
+    volumes:
+      - "..:/home/indy/indy-community-demo"
+    depends_on:
+      - dummy-cloud-agent
+      - wallet-db
+    command: 
+      - /bin/bash
+
   # 
   # dummy-cloud-agent
   #
@@ -48,12 +79,15 @@ services:
   # 
   # stand-alone CLI
   #
-  cli:
+  indy-cli:
     image: anonsolutions/indy-community
     networks:
       - von
     volumes:
       - "..:/home/indy/indy_community_demo"
+    depends_on:
+      - dummy-cloud-agent
+      - wallet-db
     command: 
       indy-cli
 
