@@ -46,6 +46,18 @@ services:
       indy-dummy-agent indy_community_demo/dummy-cloud-agent/docker-config.json
 
   # 
+  # stand-alone CLI
+  #
+  cli:
+    image: anonsolutions/indy-community
+    networks:
+      - von
+    volumes:
+      - "..:/home/indy/indy_community_demo"
+    command: 
+      indy-cli
+
+  # 
   # wallet-db
   # 
   wallet-db:
