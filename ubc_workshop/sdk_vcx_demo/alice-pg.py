@@ -55,7 +55,7 @@ async def main():
     # Set some additional configuration options specific to alice
     config['institution_name'] = 'alice'
     config['institution_logo_url'] = 'http://robohash.org/456'
-    config['genesis_path'] = 'docker.txn'
+    config['genesis_path'] = '../genesis.txn'
 
     print("#8 Initialize libvcx with new configuration")
     await vcx_init_with_config(json.dumps(config))
