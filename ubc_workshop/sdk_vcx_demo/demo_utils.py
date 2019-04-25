@@ -250,7 +250,7 @@ def load_postgres_plugin(provisionConfig):
         sys.exit(0)
 
     provisionConfig['wallet_type'] = 'postgres_storage'
-    provisionConfig['storage_config'] = '{"url":"localhost:5432"}'
+    provisionConfig['storage_config'] = '{"url":"wallet-db:5432"}'
     provisionConfig['storage_credentials'] = '{"account":"postgres","password":"mysecretpassword","admin_account":"postgres","admin_password":"mysecretpassword"}'
 
     print("Success, loaded postgres wallet storage")

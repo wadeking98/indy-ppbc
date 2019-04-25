@@ -24,7 +24,7 @@ from demo_utils import *
 
 
 provisionConfig = {
-    'agency_url': 'http://localhost:8080',
+    'agency_url': 'http://dummy-cloud-agent:8080',
     'agency_did': 'VsKV7grR1BUE29mG2Fm2kX',
     'agency_verkey': 'Hezce2UWMZ3wUhVkh2LfKSs8nDzWwzs2Win7EzNN3YaR',
     'wallet_name': 'alice_wallet_' + str(random.randint(100, 999)),
