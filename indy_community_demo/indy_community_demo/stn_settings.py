@@ -11,6 +11,7 @@ INDY_CONFIG['storage_config'] = {'url': 'wallet-db:5432'}
 # from VCX [SERVER_ENVIRONMENT.STAGING] config (connector-app/app/store/config-store.js)
 #INDY_CONFIG['vcx_agency_url'] = 'http://dummy-cloud-agent:8080'
 INDY_CONFIG['vcx_agency_url'] = 'http://vcx-agency.anon-solutions.ca:8080'
+#INDY_CONFIG['vcx_agency_url'] = 'https://agency.pstg.evernym.com'
 #INDY_CONFIG['vcx_agency_did'] = 'LqnB96M6wBALqRZsrTTwda'
 #INDY_CONFIG['vcx_agency_verkey'] = 'BpDPZHLbJFu67sWujecoreojiWZbi2dgf4xnYemUzFvB'
 INDY_CONFIG['vcx_genesis_path'] = '/tmp/stn-genesis.txt'

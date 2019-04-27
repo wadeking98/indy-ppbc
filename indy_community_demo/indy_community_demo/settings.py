@@ -29,7 +29,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'background_task',
     'imms_demo',
-    'indy_community_demo',
 ]
 
 def file_ext():

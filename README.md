@@ -17,13 +17,18 @@ cd von-network
 
 ```bash
 git clone https://github.com/AnonSolutions/indy-community-demo.git
+# this is necessary only on 'nix since we are mounting local directories
+chmod -R a+rwx indy-community-demo/indy_community_demo
 cd indy-community-demo/docker
 ./manage start
 ```
 
 That's it!  Connect to (http://localhost:8000/indy/)
 
-For more detailed instructions, and options on running all services locally, see the [documentation in django-indy-community](https://github.com/AnonSolutions/django-indy-community/tree/master/docker).
+For more detailed instructions on running the demo, and options on running all services locally, see the [documentation in django-indy-community](https://github.com/AnonSolutions/django-indy-community/tree/master/docker).
+
+For instructions on how to incorporate django-indo-community into your own application, [please see ./docs](./docs)
+
 
 ## Immunizations Consent Demo
 
@@ -38,3 +43,6 @@ git clone https://github.com/AnonSolutions/indy-community-demo.git
 cd indy-community-demo/docker
 git checkout imms_demo
 ```
+
+For an overview of this scenario, please see TBD link to docs to be included.
+
