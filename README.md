@@ -17,6 +17,8 @@ cd von-network
 
 ```bash
 git clone https://github.com/AnonSolutions/indy-community-demo.git
+# this is necessary only on 'nix since we are mounting local directories
+chmod -R a+rwx indy-community-demo/indy_community_demo
 cd indy-community-demo/docker
 ./manage start
 ```
