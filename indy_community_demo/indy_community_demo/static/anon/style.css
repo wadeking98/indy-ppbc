@@ -41,7 +41,7 @@ input[type="radio"] {
 	display: block;
 }
 
-label {
+label { 
 	margin: .5rem 0 1.5rem 0;
 	max-width: 94%;
 	font-size: 11px;
@@ -173,10 +173,8 @@ LANDING PAGE / SIGN IN
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	background-image: url(/static/anon/anonbackground.jpg);
-	background-size: cover;
-	background-position: center center;
-	overflow-x: hidden;
+	overflow: scroll;
+
 }
 
 .landing-page a {
@@ -208,7 +206,6 @@ LANDING PAGE / SIGN IN
 
 .landing-page .btn {
 	display: inline-block;
-	background: #26627A;
 }
 
 .atria-logo {
@@ -1395,7 +1392,7 @@ ANON landing page / PROFILE ADJUSTMENTS
 ==================== */
 
 .anon-landing-page {
-	background-image: url(/static/anon/anonbackground.jpg);
+	background-image: url(./anonbackground.jpg);
 	background-size: cover;
 	background-position: center center;
 	overflow-x: hidden;
@@ -1423,20 +1420,6 @@ ANON landing page / PROFILE ADJUSTMENTS
 .anon-enter-cont div h1,
 .anon-enter-cont div p {
 	margin: 0 0 1rem 0;
-}
-
-.anon-enter-left .btn {
-	background: #26627A;
-}
-
-.anon-enter-right .btn {
-	background: #26627A;
-}
-
-.btn-signin-vol,
-.btn-signin-org {
-	background: #26627A;
-	width: 10rem;
 }
 
 .anon-enter-bottom {
