@@ -21,7 +21,7 @@ services:
         touch db.sqlite3;
         DJANGO_SETTINGS_MODULE=indy_community_demo.stn_settings ./reload_db.sh;
         sleep 5;
-        DJANGO_SETTINGS_MODULE=indy_community_demo.stn_settings ./init_data.sh;
+        DJANGO_SETTINGS_MODULE=indy_community_demo.stn_settings ./init_imms.sh;
         sleep 5;
         DJANGO_SETTINGS_MODULE=indy_community_demo.stn_settings python manage.py runserver 0.0.0.0:8000 & disown;
         sleep 5;
