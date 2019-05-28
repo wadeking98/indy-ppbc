@@ -1,6 +1,6 @@
 <template>
     <div class = "container">
-        <p>hello world! 1</p>
+        <p>hello world! 2</p>
         <b-form v-on:submit.prevent="submit()">
             <b-form-group id="signup" label="Sign Up">
                 <b-form-input 
@@ -44,7 +44,6 @@
             <b-button type="submit" variant="primary">Submit</b-button>
         </b-form>
 
-        <b-spinner v-if="this.spin"></b-spinner>
         
     </div>
 </template>
@@ -55,11 +54,11 @@ import { setTimeout } from 'timers';
 export default {
     
     data:{
-        first_name:'wade',
-        last_name:'king',
-        email:'wade%40mail.com',
-        password1:'05470a5bfe',
-        password2:'05470a5bfe',
+        first_name:'',
+        last_name:'',
+        email:'',
+        password1:'',
+        password2:'',
     },
     
     methods: {
@@ -75,12 +74,12 @@ export default {
             axios.defaults.xsrfHeaderName = "X-CSRFTOKEN"
             axios.post('http://localhost:8000/indy/signup/', dataStr)
                 .then(function (response) {
-                    //currentObj.output = response.data;
+                    console.log(response.status +": "+JSON.stringify(response));
+                    vm.redirect('home');
                 })
                 .catch(function (error) {
                     //currentObj.output = error;
                 });
-            setTimeout(()=>{this.redirect('')}, 1000);
             
         },
         

@@ -37,8 +37,8 @@ import Vue from 'vue'
 export default {
     
     data:{
-        username:'wade%40mail.com',
-        password:'05470a5bfe',
+        username:'',
+        password:'',
         next: '%2Findy%2Fprofile%2F'
     },
     created: function(){
@@ -52,7 +52,16 @@ export default {
             axios.defaults.xsrfHeaderName = "X-CSRFTOKEN"
             axios.post('http://localhost:8000/indy/', dataStr)
                 .then(function (response) {
+                    var loginRe = /<title>Title<\/title>/g;
+                    var res = response.data.match(loginRe);
+                    if(!res){
+                        alert('login incorrect!');
+                    }else{
+                        vm.redirect('home');
+                    }
                     //currentObj.output = response.data;
+                    // console.log(response.status +": "+JSON.stringify(response));
+                    
                 })
                 .catch(function (error) {
                     //currentObj.output = error;
