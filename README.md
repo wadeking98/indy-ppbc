@@ -1,4 +1,4 @@
-# indy-community-demo
+# indy-ppbc
 
 This repository contains demos built using [django-indy-community](https://github.com/AnonSolutions/django-indy-community).  Please refer to this repository for framework documentation.
 
@@ -16,14 +16,15 @@ cd von-network
 ... and in the second shell:
 
 ```bash
-git clone https://github.com/AnonSolutions/indy-community-demo.git
+git clone https://github.com/wadeking98/indy-ppbc.git
 # this is necessary only on 'nix since we are mounting local directories
 chmod -R a+rwx indy-community-demo/indy_community_demo
 cd indy-community-demo/docker
 ./manage start
 ```
 
-That's it!  Connect to (http://localhost:8000/indy/)
+That's it!  Connect to (http://localhost:8000/) to view the patient portal UI
+or connect to (http://localhost:8000/indy/) to view the backend
 
 For more detailed instructions on running the demo, and options on running all services locally, see the [documentation in django-indy-community](https://github.com/AnonSolutions/django-indy-community/tree/master/docker).
 
