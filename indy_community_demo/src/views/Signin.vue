@@ -3,8 +3,8 @@
 
         <b-form v-on:submit.prevent="submit()">
             <b-form-group id="signin" label="Sign In">
-                
-
+                <!-- dynamic error message -->
+                <p class="loginErr" v-if="logErr">Incorrect Username or Password</p>
                 <b-form-input 
                     id="signin-email"
                     v-model="email"
@@ -25,9 +25,9 @@
 
             </b-form-group>
 
-            <b-button type="submit" variant="primary">Submit</b-button>
+            <b-button v-if="!loading" type="submit" variant="primary">Submit</b-button>
+            <b-spinner v-if="loading"></b-spinner>
         </b-form>
-
         
     </div>
 </template>
@@ -36,10 +36,14 @@ import axios from 'axios'
 import Vue from 'vue'
 export default {
     
-    data:{
-        username:'',
-        password:'',
-        next: '%2Findy%2Fprofile%2F'
+    data: ()=>{
+        return{
+            loading: false,
+            logErr: false,
+            username:'',
+            password:'',
+            next: '%2Findy%2Fprofile%2F'
+        }
     },
     created: function(){
         
@@ -47,20 +51,29 @@ export default {
     methods: {
         submit(){
             var vm = this;
+            vm.loading = true;
             var dataStr = 'username='+vm.email+'&password='+vm.password+'&next=%2Findy%2Fprofile%2F'
+
+            //set the csrf tokens so django doesn't get fussy when we post
             axios.defaults.xsrfCookieName = 'csrftoken'
             axios.defaults.xsrfHeaderName = "X-CSRFTOKEN"
+
             axios.post('http://localhost:8000/indy/', dataStr)
                 .then(function (response) {
+                    vm.loading = false;
+                    //determine if indy accepts the login request
                     var loginRe = /<title>Title<\/title>/g;
                     var res = response.data.match(loginRe);
+
+                    //repeate indy's response to the user
+                    // if <title>Title</title> is in indy's response
+                    // then we know that login was succesful
                     if(!res){
-                        alert('login incorrect!');
+                        vm.logErr = true;
                     }else{
                         vm.redirect('home');
                     }
-                    //currentObj.output = response.data;
-                    // console.log(response.status +": "+JSON.stringify(response));
+                    
                     
                 })
                 .catch(function (error) {
@@ -73,4 +86,10 @@ export default {
     }
 }
 </script>
+<style>
+.loginErr{
+    color: red;
+}
+</style>
+
 

@@ -1,6 +1,6 @@
 <template>
     <div class = "container">
-        <p>hello world! 2</p>
+        <p>hello world! 4</p>
         <b-form v-on:submit.prevent="submit()">
             <b-form-group id="signup" label="Sign Up">
                 <b-form-input 
@@ -39,11 +39,15 @@
                     type="password"
                 ></b-form-input>
 
+                <!-- submit button and loading icon -->
+                <b-button v-if="!loading" type="submit" variant="primary">Submit</b-button>
+                <b-spinner v-if="loading"></b-spinner>
             </b-form-group>
-
-            <b-button type="submit" variant="primary">Submit</b-button>
+                      
         </b-form>
 
+        
+        
         
     </div>
 </template>
@@ -53,12 +57,17 @@ import Vue from 'vue'
 import { setTimeout } from 'timers';
 export default {
     
-    data:{
-        first_name:'',
-        last_name:'',
-        email:'',
-        password1:'',
-        password2:'',
+    data: ()=>{
+        return{
+            //laoding status
+            loading: false,
+            //form data
+            first_name:'',
+            last_name:'',
+            email:'',
+            password1:'',
+            password2:'',
+        }
     },
     
     methods: {
@@ -66,15 +75,18 @@ export default {
             this.$router.push('/' + path);
         },
         submit(){
-            
             var vm = this;
-            var dataStr = 'first_name='+vm.first_name+'&last_name='+vm.last_name+'&email='+vm.email+'&password1='+vm.password1+'&password2='+vm.password2
+            //start the loading icon after submit is clicked
+            vm.loading = true;
+            var dataStr = 'first_name='+vm.first_name+'&last_name='+vm.last_name+'&email='+vm.email+'&password1='+vm.password1+'&password2='+vm.password2;
 
-            axios.defaults.xsrfCookieName = 'csrftoken'
-            axios.defaults.xsrfHeaderName = "X-CSRFTOKEN"
+            //set the csrf tokens so django doesn't get fussy
+            axios.defaults.xsrfCookieName = 'csrftoken';
+            axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
             axios.post('http://localhost:8000/indy/signup/', dataStr)
                 .then(function (response) {
-                    console.log(response.status +": "+JSON.stringify(response));
+                    //stop loading icon and redirect to home
+                    vm.loading = false;
                     vm.redirect('home');
                 })
                 .catch(function (error) {
@@ -84,7 +96,10 @@ export default {
         },
         
         
+        
     }
 }
+
+
 </script>
 

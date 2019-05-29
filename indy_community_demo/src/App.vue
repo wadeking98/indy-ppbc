@@ -4,7 +4,7 @@
       <b-navbar toggleable="md" type="dark" variant="dark" v-if="this.$router.currentRoute.name != 'login'">
         <b-navbar-toggle target="nav_collapse"></b-navbar-toggle>
         <b-navbar-brand>
-          <router-link to="/home">Health Gateway!</router-link>
+          <router-link to="/home">Health Gateway</router-link>
         </b-navbar-brand>
         <b-collapse is-nav id="nav_collapse">
           <b-navbar-nav class="ml-auto">
@@ -19,6 +19,11 @@
             </b-nav-item>
             <b-nav-item>
               <router-link to="/profile">Profile</router-link>
+            </b-nav-item>
+            <b-nav-item>
+              <router-link to="/">
+                Logout
+              </router-link>
             </b-nav-item>
           </b-navbar-nav>
         </b-collapse>
