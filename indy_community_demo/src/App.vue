@@ -21,9 +21,7 @@
               <router-link to="/profile">Profile</router-link>
             </b-nav-item>
             <b-nav-item>
-              <router-link to="/">
-                Logout
-              </router-link>
+              <div v-on:click="logout()" >Logout</div>
             </b-nav-item>
           </b-navbar-nav>
         </b-collapse>
@@ -39,6 +37,30 @@
     <router-view/>
   </div>
 </template>
+<script>
+import axios from 'axios'
+import Vue from 'vue'
+export default {
+  methods:{
+    redirect(path) {
+        this.$router.push('/' + path);
+    },
+    logout(){
+      var vm = this;
+      axios.defaults.xsrfCookieName = 'csrftoken';
+      axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
+      axios.get('http://localhost:8000/indy/accounts/logout/')
+        .then(function(response){
+          vm.redirect('');
+      })
+        .catch(function(error){
+
+        });
+    },
+  }
+}
+</script>
+
 
 <style>
 /* Global styles go here */
