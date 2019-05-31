@@ -7,7 +7,7 @@
                     id="signup-fname"
                     v-model="first_name"
                     placeholder="First Name"
-                ></b-form-input>
+                ></b-form-input> 
 
                 <b-form-input 
                     id="signup-lname"
