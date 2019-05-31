@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# pushes repo to github and gitlab
+git push origin --all
+git push origin --tags
+git push gl-origin --all
+git push gl-origin --tags
