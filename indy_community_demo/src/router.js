@@ -28,6 +28,11 @@ export default new Router({
       component: () => import('./views/Signup.vue'),
     },
     {
+      path: '/connections',
+      name: 'connections',
+      component: () => import('./views/Conn.vue'),
+    },
+    {
       path: '/profile',
       name: 'profile',
       // route level code-splitting

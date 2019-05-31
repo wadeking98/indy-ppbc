@@ -1,8 +1,8 @@
 <template>
     <div class = "container">
-
+        <h2>Sign In</h2>
         <b-form v-on:submit.prevent="submit()">
-            <b-form-group id="signin" label="Sign In">
+            <b-form-group id="signin" label="">
                 <!-- dynamic error message -->
                 <p class="loginErr" v-if="logErr">Incorrect Username or Password</p>
                 <b-form-input 
@@ -88,7 +88,7 @@ export default {
 </script>
 <style>
 .loginErr{
-    color: red;
+    color: orange;
 }
 </style>
 

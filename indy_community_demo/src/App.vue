@@ -21,6 +21,9 @@
               <router-link to="/profile">Profile</router-link>
             </b-nav-item>
             <b-nav-item>
+              <router-link to="/connections">Connections</router-link>
+            </b-nav-item>
+            <b-nav-item>
               <div v-on:click="logout()" >Logout</div>
             </b-nav-item>
           </b-navbar-nav>

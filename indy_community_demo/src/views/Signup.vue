@@ -1,8 +1,8 @@
 <template>
     <div class = "container">
-        <p>hello world! 4</p>
+        <h2>Sign Up</h2>
         <b-form v-on:submit.prevent="submit()">
-            <b-form-group id="signup" label="Sign Up">
+            <b-form-group id="signup-optional" label="">
                 <b-form-input 
                     id="signup-fname"
                     v-model="first_name"
@@ -14,34 +14,45 @@
                     v-model="last_name"
                     placeholder="Last Name"
                 ></b-form-input>
+            </b-form-group>
 
+            <b-form-group id="signup-required">
                 <b-form-input 
                     id="signup-email"
                     v-model="email"
-                    placeholder="Email"
+                    placeholder="Email*"
                     type="email"
                     required
                 ></b-form-input>
+                <!-- error message -->
+                <p class="error" v-if="!loading && !emailIsValid(email) && error">Invalid Email!</p>
 
                 <b-form-input 
                     id="signup-password1"
                     v-model="password1"
-                    placeholder="Password"
+                    placeholder="Password*"
                     required
                     type="password"
                 ></b-form-input>
+                <!-- error message -->
+                <p class="error" v-if="!loading && ((password1 !== password2)) && error">Passwords Do Not Match!</p>
+                <p class="error" v-else-if="(password1.length == 0) && error">Password Field Required!</p>
 
                 <b-form-input 
                     id="signup-password2"
                     v-model="password2"
-                    placeholder="Confirm Password"
+                    placeholder="Confirm Password*"
                     required
                     type="password"
                 ></b-form-input>
 
                 <!-- submit button and loading icon -->
-                <b-button v-if="!loading" type="submit" variant="primary">Submit</b-button>
+                <b-button v-if="!loading && ((password1 !== password2) || (password1.length == 0) || !emailIsValid(email))" v-on:click="earlySubmit()" variant="secondary">Submit</b-button>
+                <b-button v-else-if="!loading" type="submit" variant="primary">Submit</b-button>
                 <b-spinner v-if="loading"></b-spinner>
+
+                
+                
             </b-form-group>
                       
         </b-form>
@@ -59,6 +70,7 @@ export default {
     
     data: ()=>{
         return{
+            error: false,
             //laoding status
             loading: false,
             //form data
@@ -87,19 +99,30 @@ export default {
                 .then(function (response) {
                     //stop loading icon and redirect to home
                     vm.loading = false;
-                    vm.redirect('home');
+                    vm.redirect('signin');
                 })
                 .catch(function (error) {
                     //currentObj.output = error;
                 });
             
         },
-        
-        
-        
+        earlySubmit(){
+            this.error = true;
+            console.log(!this.loading && ((this.password1 !== this.password2) || (this.password1.length == 0)) && this.emailIsValid(this.email));
+        },
+        emailIsValid(email){
+            var emailRx = /.+@.+\..+/g;
+            
+            return email.match(emailRx) != null;
+        },
     }
 }
 
 
 </script>
 
+<style>
+.error{
+    color: orange;
+}
+</style>
