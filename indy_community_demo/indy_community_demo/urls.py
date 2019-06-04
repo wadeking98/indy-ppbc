@@ -23,5 +23,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     # path('', RedirectView.as_view(url='indy/')),
     path('indy/', include('indy_community.urls')),
+    path('ext/', include('api_extensions.urls')),
     url(r'^$', TemplateView.as_view(template_name='index.html')),
 ]

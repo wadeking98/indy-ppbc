@@ -95,7 +95,7 @@ ROOT_URLCONF = 'indy_community_demo.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'dist')],
+        'DIRS': [os.path.join(BASE_DIR, 'dist'), os.path.join(BASE_DIR,'test/templates/front_end')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

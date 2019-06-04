@@ -4,6 +4,8 @@
         <b-button v-on:click="adminLogin()">
             Create connection
         </b-button>
+
+        <b-button @click="test()"></b-button>
         
     </div>
 </template>
@@ -18,6 +20,7 @@ export default {
         }
     },
     methods:{
+        
         loadConn(){
             var vm = this;
             axios.get('http://localhost:8000/indy/list_connections/')
@@ -57,6 +60,22 @@ export default {
             .catch(function(err){
                 console.log(err);
             });
+        },
+        test(){
+            axios.defaults.xsrfCookieName = 'csrftoken';
+            axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
+            axios.get('http://localhost:8000/ext/wallet')
+            .then(function(res){
+                var testStr = 'wallet_name='+res.data.wallet+'&partner_name=faber@mail.com'
+                axios.post('http://localhost:8000/ext/conn/', testStr)
+                .then(function(res){
+                    console.log(res.data);
+                })
+                .catch(function(err){
+
+                });
+            })
+            
         }
     },
     
