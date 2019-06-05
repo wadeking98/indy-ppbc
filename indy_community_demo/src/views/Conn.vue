@@ -1,11 +1,19 @@
 <template>
     <div class ="container">
-        
+        <b-form id="connection" v-on:submit.prevent="test()">
+            <b-form-input 
+                id="connection_request"
+                v-model="partner"
+                placeholder="Partner Email"
+            ></b-form-input>
+            <b-button type="submit" variant="primary">Submit</b-button>
+        </b-form>
+
         <b-button v-on:click="adminLogin()">
             Create connection
         </b-button>
 
-        <b-button @click="test()"></b-button>
+        
         
     </div>
 </template>
@@ -14,9 +22,7 @@ import axios from 'axios'
 export default {
     data() {
         return {
-            content: '',
-            username: 'admin%40mail.com',
-            password: ''
+            partner: '',
         }
     },
     methods:{
@@ -62,11 +68,13 @@ export default {
             });
         },
         test(){
+            var vm = this;
+
             axios.defaults.xsrfCookieName = 'csrftoken';
             axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
             axios.get('http://localhost:8000/ext/wallet')
             .then(function(res){
-                var testStr = 'wallet_name='+res.data.wallet+'&partner_name=faber@mail.com'
+                var testStr = 'wallet_name='+res.data.wallet+'&partner_name='+vm.partner
                 axios.post('http://localhost:8000/ext/conn/', testStr)
                 .then(function(res){
                     console.log(res.data);
