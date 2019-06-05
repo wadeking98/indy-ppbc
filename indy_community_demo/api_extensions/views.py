@@ -79,13 +79,22 @@ def connect(request, form_template='indy/connection/request.html'):
             # this user's email
             this_name = get_user_model().objects.filter(wallet=wallet_name).first().email
             this_wallet = wallet_for_current_session(request).wallet
-            partner_wallet = get_user_model().objects.first()
+            partner_wallet = get_user_model().objects.filter(email=partner_name).first().wallet
+            test = get_user_model().objects.filter(email=partner_name).all()
            
             # send connection invitation from partner to this client
-            print(partner_wallet)
-            inbound = send_connection_invitation(this_wallet, partner_name)
-            outbound = send_connection_confirmation(wallet_for_current_session(request).wallet, 1, partner_name, None)
-            return HttpResponse(partner_wallet)
+            print(test)
+            my_connection = send_connection_invitation(this_wallet, partner_name)
+            their_connection = AgentConnection(
+                wallet = partner_wallet,
+                partner_name = partner_name,
+                invitation = my_connection.invitation,
+                token = my_connection.token,
+                connection_type = 'Inbound',
+                status = 'Pending')
+            their_connection.save()
+            #outbound = send_connection_confirmation(wallet_for_current_session(request).wallet, inbound.connection_id, partner_name, None)
+            return HttpResponse(my_connection.connection_data)
             # set wallet password
             # TODO vcx_config['something'] = raw_password
 
