@@ -11,6 +11,12 @@ from pprint import pprint
 import json
 
 def get_wallet(request):
+    """ Returns the wallet of the current user in a json response
+    predominantly used by front end to get this users wallet name
+
+    Returns:
+    JsonResponse: The wallet name of the current user
+    """
     wallet_name = request.session['wallet_name']
 
     # validate it is the correct wallet
@@ -57,16 +63,33 @@ def wallet_for_current_session(request):
         raise Exception('Error wallet/session config is not valid')
 
 
+
+def list_conn(request):
+    """
+    Returns the connections for the current user 
+    """
+    wallet = wallet_for_current_session(request)
+    return AgentConnection.connection_data
+
+
+
 def connect(request, form_template='indy/connection/request.html'):
+    """Creates a two way connection automatically between two users
+    
+    Parameters:
+    request: the request object recieved by the view
+    form_template (str): the path to the file containing the HTML
+    request outline
+
+    Returns:
+    HttpResponse: output/debugging info
+    """
     form = SendConnectionInvitationForm(request.POST)
     if request.method=='POST':
         if not form.is_valid():
-            #return render(request, 'indy/form_response.html', {'msg': 'Form error', 'msg_txt': str(form.errors)})
             return HttpResponse("form invalid")
         else:
             cd = form.cleaned_data
-            #the email of the partenr we're trying to connect to
-            partner_name = cd.get('partner_name')
 
             #this user's wallet name
             wallet_name = cd.get('wallet_name')
@@ -76,25 +99,29 @@ def connect(request, form_template='indy/connection/request.html'):
 
             
 
-            # this user's email
-            this_name = get_user_model().objects.filter(wallet=wallet_name).first().email
-            this_wallet = wallet_for_current_session(request).wallet
-            partner_wallet = get_user_model().objects.filter(email=partner_name).first().wallet
-            test = get_user_model().objects.filter(email=partner_name).all()
-           
-            # send connection invitation from partner to this client
-            print(test)
-            my_connection = send_connection_invitation(this_wallet, partner_name)
-            their_connection = AgentConnection(
-                wallet = partner_wallet,
-                partner_name = partner_name,
-                invitation = my_connection.invitation,
-                token = my_connection.token,
-                connection_type = 'Inbound',
-                status = 'Pending')
-            their_connection.save()
-            #outbound = send_connection_confirmation(wallet_for_current_session(request).wallet, inbound.connection_id, partner_name, None)
-            return HttpResponse(my_connection.connection_data)
+            # connected user's email and wallet
+            this_org = IndyOrganization.objects.filter(wallet=wallet_name).first()
+            this_user = get_user_model().objects.filter(wallet=wallet_name).first()
+
+            this = this_org if this_org is not None else this_user
+            this_name = this_org.org_name if this_org is not None else this_user.email
+
+            # #partner's email and wallet
+            partner_name = cd.get('partner_name')
+            partner_org = IndyOrganization.objects.filter(org_name=partner_name).first()
+            partner_user = get_user_model().objects.filter(email=partner_name).first()
+
+            partner = partner_org if partner_org is not None else partner_user
+            
+
+            # send connection invitation from online user to partner
+            my_connection = send_connection_invitation(this.wallet, partner_name)
+
+            connData = json.loads(my_connection.connection_data)['data']
+
+            # send confirmation from partner to online user
+            send_connection_confirmation(partner.wallet, 1, this_name, json.dumps(connData['invite_detail']))
+            return HttpResponse(partner)
             # set wallet password
             # TODO vcx_config['something'] = raw_password
 
