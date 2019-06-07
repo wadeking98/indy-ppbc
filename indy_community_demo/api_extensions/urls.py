@@ -7,5 +7,6 @@ from .views import *
 
 urlpatterns = [
     path('wallet/', get_wallet, name='wallet'),
-    path('conn/', connect, name='conn')
+    path('conn/', connect, name='conn'),
+    path('list_conn/', list_connections, name='list_conn')
 ]

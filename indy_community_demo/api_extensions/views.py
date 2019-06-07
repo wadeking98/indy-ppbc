@@ -43,7 +43,10 @@ def wallet_for_current_session(request):
     """
 
     wallet_name = request.session['wallet_name']
-    wallet = get_user_model().objects.filter(wallet=wallet_name).first()
+    wallet_org = IndyOrganization.objects.filter(wallet=wallet_name).first()
+    wallet_user = get_user_model().objects.filter(wallet=wallet_name).first()
+
+    wallet = wallet_org if wallet_org is not None else wallet_user
 
     # validate it is the correct wallet
     wallet_type = request.session['wallet_type']
@@ -51,25 +54,40 @@ def wallet_for_current_session(request):
     if wallet_type == 'user':
         # verify current user owns wallet
         if wallet_owner == request.user.email:
-            return wallet
+            return wallet.wallet
         raise Exception('Error wallet/session config is not valid')
     elif wallet_type == 'org':
         # verify current user has relationship to org that owns wallet
         for org in request.user.indyrelationship_set.all():
             if org.org.org_name == wallet_owner:
-                return wallet
+                return wallet.wallet
         raise Exception('Error wallet/session config is not valid')
     else:
         raise Exception('Error wallet/session config is not valid')
 
 
 
-def list_conn(request):
+def list_connections(
+    request,
+    ):
     """
-    Returns the connections for the current user 
+    List Connections for the current wallet.
     """
+
+    # expects a wallet to be opened in the current session
     wallet = wallet_for_current_session(request)
-    return AgentConnection.connection_data
+    connections = AgentConnection.objects.filter(wallet=wallet).all()
+
+    ret_data = []
+    for conn in connections:
+        ret_data.append({
+        "wallet": conn.wallet.wallet_name, 
+        "partner_name": conn.partner_name, 
+        "status":conn.status,
+        "type":conn.connection_type,
+        "data":conn.connection_data,
+        })
+    return HttpResponse(json.dumps(ret_data))
 
 
 

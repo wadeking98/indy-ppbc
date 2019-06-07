@@ -1,73 +1,49 @@
 <template>
     <div class ="container">
-        <b-form id="connection" v-on:submit.prevent="test()">
+        <b-form id="connection" v-on:submit.prevent="sendConn()">
             <b-form-input 
                 id="connection_request"
                 v-model="partner"
-                placeholder="Partner Email"
+                placeholder="Partner Email or Organization Name"
             ></b-form-input>
             <b-button type="submit" variant="primary">Submit</b-button>
+            <b-button variant="primary" @click="loadConn()">Refresh</b-button>
         </b-form>
 
-        <b-button v-on:click="adminLogin()">
-            Create connection
-        </b-button>
-
-        
+        <connection 
+        v-for="conn in conenctions" 
+        v-bind:wallet="conn.wallet" 
+        v-bind:partner="conn.partner_name"
+        v-bind:status="conn.status" 
+        v-bind:type="conn.type"
+        v-bind:key="conn.wallet"
+        ></connection>
+      
         
     </div>
 </template>
 <script>
 import axios from 'axios'
+import Vue from 'vue'
 export default {
     data() {
         return {
             partner: '',
+            conenctions: [],
         }
     },
     methods:{
         
         loadConn(){
             var vm = this;
-            axios.get('http://localhost:8000/indy/list_connections/')
+            axios.get('http://localhost:8000/ext/list_conn/')
             .then(function(response){
-                vm.content = response.data;
-                console.log(response.data.head);
+                vm.conenctions = response.data;
+                console.log(vm.conenctions);
             })
         },
-        adminLogin(){
-            var vm = this;
-            var dataStr = "username=admin%40mail.com&password=pass1234&next=%2Fadmin%2F"
-            axios.defaults.xsrfCookieName = 'csrftoken';
-            axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
-            //login as admin
-            axios.post('http://localhost:8000/admin/login/', dataStr)
-            .then(function(response){
-                var connStrIn = 'wallet=i_wade_mail_com&partner_name=bcgov%40mail.com&invitation=&token=&status=Active&connection_type=InBound&connection_data=&_save=Save';
-                var connStrOut = 'wallet=o_bcgov&partner_name=wade%40mail.com&invitation=&token=&status=Active&connection_type=OutBound&connection_data=&_save=Save';
-                //add a connection in one direction through django admin
-                axios.post('http://localhost:8000/admin/indy_community/agentconnection/add/', connStrIn)
-                .then(function(response){
-                    console.log('inbound connection success!')
-                })
-                .catch(function(err){
-                    console.log(err);
-                });
-
-                //add a connection in the other direction, this can be done synchroneously
-                axios.post('http://localhost:8000/admin/indy_community/agentconnection/add/', connStrOut)
-                .then(function(response){
-                    console.log('outbound connection success!')
-                })
-                .catch(function(err){
-                    console.log(err);
-                });
-            })
-            .catch(function(err){
-                console.log(err);
-            });
-        },
-        test(){
+        
+        sendConn(){
             var vm = this;
 
             axios.defaults.xsrfCookieName = 'csrftoken';
@@ -86,6 +62,17 @@ export default {
             
         }
     },
+    created() {
+        this.loadConn();
+    },
     
 }
+
+Vue.component('connection', {
+    props:['wallet', 'partner', 'status', 'type'],
+    template:'<b-card bg-variant="info" text-variant="white">\
+    <h3>{{ partner }}</h3>\
+    <h5>Status: {{ status }}    Type: {{ type }}</h5>\
+    </b-card>'
+})
 </script>
