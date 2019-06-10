@@ -119,8 +119,10 @@ export default {
             var userUrl = 'http://localhost:8000/indy/signup/';
             var orgUrl = 'http://localhost:8000/indy/org_signup/'
 
+            //ternerary operators to assign the right type of url and data string
             var url = vm.Org_variant === 'primary' ? orgUrl : userUrl;
             var data = vm.Org_variant === 'primary' ? orgDataStr : userDataStr;
+            
             //set the csrf tokens so django doesn't get fussy
             axios.defaults.xsrfCookieName = 'csrftoken';
             axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";

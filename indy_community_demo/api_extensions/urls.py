@@ -8,5 +8,7 @@ from .views import *
 urlpatterns = [
     path('wallet/', get_wallet, name='wallet'),
     path('conn/', connect, name='conn'),
-    path('list_conn/', list_connections, name='list_conn')
+    path('list_conn/', list_connections, name='list_conn'),
+    path('list_usr/', list_users, name='list_usr'),
+    path('list_org/', list_orgs, name='list_org')
 ]

@@ -78,6 +78,8 @@ def list_connections(
     wallet = wallet_for_current_session(request)
     connections = AgentConnection.objects.filter(wallet=wallet).all()
 
+    
+
     ret_data = []
     for conn in connections:
         ret_data.append({
@@ -89,6 +91,24 @@ def list_connections(
         })
     return HttpResponse(json.dumps(ret_data))
 
+
+def list_users(request):
+    this_user = get_user_model().objects.all()
+
+    ret_data = []
+    for user in this_user:
+        if user.wallet is not None:
+            ret_data.append(user.email)
+    return HttpResponse(json.dumps(ret_data))
+
+
+def list_orgs(request):
+    this_org = IndyOrganization.objects.all()
+
+    ret_data = []
+    for org in this_org:
+        ret_data.append(org.org_name)
+    return HttpResponse(json.dumps(ret_data))
 
 
 def connect(request, form_template='indy/connection/request.html'):
